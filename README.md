@@ -1,6 +1,6 @@
 # REST API OpenAPI Spec
 
-**Version:** 2026-03
+**Version:** 2026-04
 
 Raw backend REST API specs for the Nomad Media services.
 
