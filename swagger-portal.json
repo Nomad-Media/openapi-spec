@@ -27395,7 +27395,12 @@
           "Midroll",
           "Postroll"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Preroll",
+          "Midroll",
+          "Postroll"
+        ]
       },
       "AddAnnotationModel": {
         "type": "object",
@@ -28498,7 +28503,54 @@
           "Replacing"
         ],
         "type": "string",
-        "description": "Indicates the current processing or lifecycle status of an asset.\r\nAn asset transitions through various statuses during operations such as upload, archive, restore, and delete."
+        "description": "Indicates the current processing or lifecycle status of an asset.\r\nAn asset transitions through various statuses during operations such as upload, archive, restore, and delete.",
+        "x-enumNames": [
+          "Available",
+          "Renaming",
+          "Copying",
+          "Restoring",
+          "Registering",
+          "Uploading",
+          "Archiving",
+          "Archived",
+          "PendingArchive",
+          "PendingRestore",
+          "Restored",
+          "Deleting",
+          "Moving",
+          "SlugReplaced",
+          "Updating",
+          "Error",
+          "Assembling",
+          "Clipping",
+          "Placeholder",
+          "Creating",
+          "Replacing"
+        ],
+        "x-enumFlags": true,
+        "x-enumDescriptions": [
+          "The asset is fully processed and available for access, streaming, and download.",
+          "The asset is currently being renamed.",
+          "The asset is currently being copied to a new location.",
+          "The asset is currently being restored from archive storage.",
+          "The asset is being registered from an existing storage object.",
+          "The asset is currently being uploaded via the multipart upload process.",
+          "The asset is in the process of being moved to archival storage.",
+          "The asset has been archived and is not available for direct access until restored.",
+          "The asset is queued for archival but the process has not yet started.",
+          "The asset is queued for restoration but the process has not yet started.",
+          "The asset has been restored from archive and is available for access.",
+          "The asset is in the process of being permanently deleted.",
+          "The asset is being moved to a different folder.",
+          "The asset's placeholder content has been replaced with actual media.",
+          "The asset's metadata or properties are being updated.",
+          "An error occurred during processing. Check job history for details.",
+          "The asset's multipart upload parts are being assembled into the final file.",
+          "A clip is being extracted from this video asset.",
+          "The asset is a placeholder reserving a spot before actual content is uploaded.",
+          "The asset is being created (initial processing phase).",
+          "The asset's content is being replaced with a new file."
+        ]
       },
       "AssetTransferStatuses": {
         "enum": [
@@ -28509,7 +28561,16 @@
           "Complete",
           "Cancelled"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Queued",
+          "Downloading",
+          "Uploading",
+          "Error",
+          "Complete",
+          "Cancelled"
+        ],
+        "x-enumFlags": true
       },
       "AssetTypes": {
         "enum": [
@@ -28518,7 +28579,17 @@
           "Bucket"
         ],
         "type": "string",
-        "description": "Categorizes the type of an asset in the media library."
+        "description": "Categorizes the type of an asset in the media library.",
+        "x-enumNames": [
+          "Folder",
+          "File",
+          "Bucket"
+        ],
+        "x-enumDescriptions": [
+          "A folder that can contain other assets (files and sub-folders).",
+          "A media file asset (video, audio, image, document, etc.).",
+          "A top-level storage bucket representing a root container for assets."
+        ]
       },
       "AssetUploadCompletePartRequestModel": {
         "type": "object",
@@ -28654,7 +28725,11 @@
           2
         ],
         "type": "integer",
-        "format": "int32"
+        "format": "int32",
+        "x-enumNames": [
+          "Body",
+          "Head"
+        ]
       },
       "AssociatedAssetModel": {
         "type": "object",
@@ -28704,7 +28779,12 @@
           3
         ],
         "type": "integer",
-        "format": "int32"
+        "format": "int32",
+        "x-enumNames": [
+          "Asset",
+          "External",
+          "Inline"
+        ]
       },
       "AssociatedAssetTypes": {
         "enum": [
@@ -28712,7 +28792,11 @@
           2
         ],
         "type": "integer",
-        "format": "int32"
+        "format": "int32",
+        "x-enumNames": [
+          "Script",
+          "Style"
+        ]
       },
       "AudioTrackModel": {
         "type": "object",
@@ -28885,7 +28969,17 @@
           "Expired"
         ],
         "type": "string",
-        "description": "Indicates the availability status of an asset relative to its configured availability window."
+        "description": "Indicates the availability status of an asset relative to its configured availability window.",
+        "x-enumNames": [
+          "Active",
+          "Embargoed",
+          "Expired"
+        ],
+        "x-enumDescriptions": [
+          "The current date falls within the asset's availability window.",
+          "The current date is before the asset's availability start date.",
+          "The current date is after the asset's availability end date."
+        ]
       },
       "BaseIdModelGuid": {
         "type": "object",
@@ -29548,7 +29642,12 @@
           "PublicApi",
           "RestrictedContent"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Content",
+          "PublicApi",
+          "RestrictedContent"
+        ]
       },
       "CollectionContentModel": {
         "allOf": [
@@ -29935,7 +30034,12 @@
           3
         ],
         "type": "integer",
-        "format": "int32"
+        "format": "int32",
+        "x-enumNames": [
+          "Admin",
+          "Lambda",
+          "Groundtruth"
+        ]
       },
       "ContentAttributes": {
         "enum": [
@@ -29944,7 +30048,13 @@
           "Disliked",
           "Favorite"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Undefined",
+          "Liked",
+          "Disliked",
+          "Favorite"
+        ]
       },
       "ContentBulkMetadataUpdateModel": {
         "type": "object",
@@ -30402,7 +30512,12 @@
           "Override",
           "Auto"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Original",
+          "Override",
+          "Auto"
+        ]
       },
       "ContentManagementTypes": {
         "enum": [
@@ -30411,7 +30526,12 @@
           3
         ],
         "type": "integer",
-        "format": "int32"
+        "format": "int32",
+        "x-enumNames": [
+          "None",
+          "DataSelector",
+          "FormSelector"
+        ]
       },
       "ContentResultsModel": {
         "type": "object",
@@ -30479,7 +30599,27 @@
           "Transcript",
           "Other"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Line",
+          "Word",
+          "Person",
+          "Location",
+          "Organization",
+          "CommercialItem",
+          "Event",
+          "Date",
+          "Quantity",
+          "Title",
+          "Entity",
+          "KeyPhrase",
+          "MixedSentiment",
+          "NegativeSentiment",
+          "NeutralSentiment",
+          "PositiveSentiment",
+          "Transcript",
+          "Other"
+        ]
       },
       "ContentTypeModel": {
         "type": "object",
@@ -30885,7 +31025,21 @@
           "AssetSharedExternal",
           "AnonymousUpload"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "AssetRestored",
+          "UserApproved",
+          "CollectionShared",
+          "CollectionSharedExternal",
+          "UserInvite",
+          "AssetShared",
+          "DownloadZipFile",
+          "MediaBuilderNotification",
+          "LiveRecordingStopped",
+          "ExportSearchResults",
+          "AssetSharedExternal",
+          "AnonymousUpload"
+        ]
       },
       "EmbeddedDownloadModel": {
         "type": "object",
@@ -31105,7 +31259,15 @@
           "Audio",
           "SearchText"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "MediaSummary",
+          "Text",
+          "Image",
+          "Video",
+          "Audio",
+          "SearchText"
+        ]
       },
       "EventBatchAuthModel": {
         "type": "object",
@@ -31221,7 +31383,21 @@
           "Blurry"
         ],
         "type": "string",
-        "description": "Categorizes the type of facial recognition match between a detected face and a person.\r\nUsed to filter face results when querying person faces."
+        "description": "Categorizes the type of facial recognition match between a detected face and a person.\r\nUsed to filter face results when querying person faces.",
+        "x-enumNames": [
+          "Automatch",
+          "ProbableMatch",
+          "NotMatch",
+          "ConfirmedMatch",
+          "Blurry"
+        ],
+        "x-enumDescriptions": [
+          "The face was automatically matched to the person by the AI with high confidence.",
+          "The face is a probable match that requires manual review to confirm.",
+          "The face has been reviewed and determined to not match the person.",
+          "The face has been manually reviewed and confirmed as a match for the person.",
+          "The detected face is too blurry for reliable matching."
+        ]
       },
       "FaceModel": {
         "type": "object",
@@ -31446,7 +31622,12 @@
           "PreviewImage",
           "Header"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "List",
+          "PreviewImage",
+          "Header"
+        ]
       },
       "FeaturedGroupModel": {
         "type": "object",
@@ -31764,7 +31945,8 @@
               },
               "name": {
                 "type": "string",
-                "nullable": true
+                "nullable": true,
+                "readOnly": true
               },
               "authenticationType": {
                 "type": "string",
@@ -32150,11 +32332,13 @@
         "properties": {
           "key": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "readOnly": true
           },
           "value": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "readOnly": true
           }
         },
         "additionalProperties": false
@@ -33371,7 +33555,24 @@
           "Realtime",
           "Basic"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Identifies the underlying streaming technology used for a live channel.\r\nThe channel type determines which encoding, input, and output options are available.",
+        "x-enumNames": [
+          "Normal",
+          "EdgeCaster",
+          "Ivs",
+          "External",
+          "Realtime",
+          "Basic"
+        ],
+        "x-enumDescriptions": [
+          "A standard AWS MediaLive channel supporting full encoding pipeline configuration.",
+          "A channel backed by the EdgeCaster hardware encoder.",
+          "A channel backed by AWS Interactive Video Service (IVS) for ultra-low-latency streaming.",
+          "A channel that references an externally managed stream not provisioned through this platform.",
+          "A real-time, sub-second latency channel (e.g. Red5 Pro, Phenix).",
+          "A simplified channel type with a reduced feature set, suitable for straightforward streaming scenarios."
+        ]
       },
       "LiveClipRequestModel": {
         "allOf": [
@@ -33889,7 +34090,11 @@
           2
         ],
         "type": "integer",
-        "format": "int32"
+        "format": "int32",
+        "x-enumNames": [
+          "Online",
+          "Offline"
+        ]
       },
       "LiveRequestActions": {
         "enum": [
@@ -33910,7 +34115,25 @@
           "StateUpdate",
           "Resume"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Create",
+          "Update",
+          "Delete",
+          "Sync",
+          "Start",
+          "Stop",
+          "Initialize",
+          "InitializeInputs",
+          "Pause",
+          "Next",
+          "TrackOutput",
+          "Cleanup",
+          "CdnEndpointInfo",
+          "UpdateEvent",
+          "StateUpdate",
+          "Resume"
+        ]
       },
       "LiveRequestModel": {
         "allOf": [
@@ -33952,7 +34175,14 @@
           "ScheduleEvent",
           "DeliveryPackage"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Channel",
+          "Input",
+          "ScheduleEvent",
+          "DeliveryPackage"
+        ],
+        "x-enumFlags": true
       },
       "LiveResultModelLiveChannelModel": {
         "type": "object",
@@ -34517,7 +34747,29 @@
           "IsPendingInvitation"
         ],
         "type": "string",
-        "description": "Indicates the result status of a login or account-related operation.\r\nReturned in the LoginStatus field of login and account response models."
+        "description": "Indicates the result status of a login or account-related operation.\r\nReturned in the LoginStatus field of login and account response models.",
+        "x-enumNames": [
+          "TwoFactorSetupRequired",
+          "TwoFactorCodeRequired",
+          "IsDisabled",
+          "IsPendingEmailConfirmation",
+          "IsPendingNewAccountSignup",
+          "IsPendingAccountMigrationSignup",
+          "IsPendingNewPassword",
+          "IsExpired",
+          "IsPendingInvitation"
+        ],
+        "x-enumDescriptions": [
+          "The user must set up two-factor authentication before they can log in.",
+          "The user must provide a two-factor authentication code to complete login.",
+          "The user account is disabled and cannot be used.",
+          "The user must verify their email address before they can log in.",
+          "The user account registration is not complete. The user must finish the signup process.",
+          "The user account requires migration signup to complete the transition to the current system.",
+          "The user must set a new password before they can log in (e.g., after an admin-initiated password reset).",
+          "The user account has expired and is no longer accessible.",
+          "The user has a pending guest invitation that must be completed via the register-guest endpoint."
+        ]
       },
       "LogoutRequestModel": {
         "type": "object",
@@ -34755,7 +35007,146 @@
           "FrameStateFlags",
           "NewsRoomFailureTypes"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "PageTemplates",
+          "Fields",
+          "LookupTypes",
+          "ContentTemplates",
+          "ContentDefinitions",
+          "ContentTypes",
+          "ContentDefinitionGroups",
+          "WorkflowStatuses",
+          "DataSelectorContentDefinitions",
+          "Content",
+          "TemplatePacks",
+          "PopularTags",
+          "AllTags",
+          "PropertyValues",
+          "MediaTypes",
+          "AssetTypes",
+          "ContentFields",
+          "FormSelectorContentDefinitions",
+          "CustomRenderers",
+          "ConstantContactCampaigns",
+          "Languages",
+          "SecurityGroups",
+          "Collections",
+          "SecurityPermissions",
+          "CustomLabelerTypes",
+          "CustomLabelerStatuses",
+          "Labels",
+          "Users",
+          "MeetingSources",
+          "LiveScheduleEventStatuses",
+          "LiveExternalOutputProfiles",
+          "LiveScheduleEventTypes",
+          "LiveChannelStatuses",
+          "LiveInputCodecs",
+          "LiveInputMaximumBitrates",
+          "LiveInputResolutions",
+          "LiveInputStatuses",
+          "LiveInputTypes",
+          "NodeTypes",
+          "LiveChannelTypes",
+          "LiveOutputTypes",
+          "Roles",
+          "NewsSystems",
+          "NprProfileTypes",
+          "PaymentStatuses",
+          "PingStatuses",
+          "PropertyValueTypes",
+          "ScheduleItemSearchTypes",
+          "ScheduleItemSourceTypes",
+          "ScheduleItemTypes",
+          "ScheduleStatuses",
+          "ScheduleTypes",
+          "StorageClasses",
+          "SubtitleTypes",
+          "SubtitleValueTypes",
+          "TextEntityTypes",
+          "UploadOverwriteOptions",
+          "UserSessionStatuses",
+          "VideoSegmentTypes",
+          "VideoTrackingEvents",
+          "BatchActionProcessorExecutionTypes",
+          "VideoTrackingAttributes",
+          "TemplatePackTypes",
+          "AdServerTypes",
+          "AdSlotTypes",
+          "AssetRestoreTiers",
+          "AssetStatuses",
+          "BatchActions",
+          "BucketTypes",
+          "CloudFrontDistributions",
+          "ContentAttributes",
+          "ContentLanguageStatuses",
+          "ContentTextTypes",
+          "ContentUnitOfWorkActions",
+          "DataFilterFieldOperators",
+          "DataIndexTypes",
+          "DataJoinFilterFieldClauses",
+          "DataPatchTypes",
+          "DataSortHeading",
+          "EmailTypes",
+          "EndPointSystems",
+          "FaceMatchTypes",
+          "FeaturedContentTypes",
+          "ImageTypes",
+          "IvsChannelTypes",
+          "IvsLatencyTypes",
+          "JobProcessorActions",
+          "LiveRequestActions",
+          "LiveRequestTargets",
+          "LoginResponseStatuses",
+          "MediaConvertTypes",
+          "MessageInfoTypes",
+          "MetadataTypes",
+          "ModelContainerModes",
+          "DayOfWeek",
+          "VideoTrackingActions",
+          "FrameIngestActions",
+          "ArchivePrefixTypes",
+          "LiveRecordingStatuses",
+          "LiveContentStatuses",
+          "LiveScheduleStatuses",
+          "ContentActionTypes",
+          "LiveChannelRealtimeTypes",
+          "MediaLiveOutputTypes",
+          "TextCaptionTypes",
+          "LiveStateUpdateModes",
+          "MediaBuilderItemSourceTypes",
+          "MediaBuilderStatuses",
+          "LocalRestoreProfiles",
+          "UserSessionTrackingTypes",
+          "ShareDurationTypes",
+          "Transcoders",
+          "BulkIteratorStates",
+          "ResourceClass",
+          "ContentVersions",
+          "ContentFieldClassifications",
+          "ContentAttributeFlags",
+          "ContentDataIndexTypes",
+          "ImportActions",
+          "ContentMutatorClassifications",
+          "ShareTypes",
+          "SharePermissions",
+          "ShareStatuses",
+          "SearchTextFields",
+          "PropertyChangeTypes",
+          "UploadReplaceOptions",
+          "AdvanceSearchFields",
+          "RollupMeasurementSourceTypes",
+          "StatMeasurementAggregationOperationTypes",
+          "Transcribers",
+          "EmbeddingTypes",
+          "AssetTransferStatuses",
+          "AvailabilityStatuses",
+          "VideoTrackingStatuses",
+          "VideoTrackingAlertStatuses",
+          "FrameStateFlags",
+          "NewsRoomFailureTypes"
+        ]
       },
       "MeasurementInfo": {
         "type": "object",
@@ -35791,7 +36182,26 @@
           "Other",
           "MediaManifest"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Classifies the primary media type of an asset file, used to drive playback, thumbnailing, and transcoding behaviour.",
+        "x-enumNames": [
+          "Image",
+          "Video",
+          "Document",
+          "Text",
+          "Audio",
+          "Other",
+          "MediaManifest"
+        ],
+        "x-enumDescriptions": [
+          "A still image file (e.g. JPEG, PNG, GIF, TIFF).",
+          "A video file (e.g. MP4, MOV, MXF).",
+          "A document file (e.g. PDF, Word, Excel).",
+          "A plain-text file (e.g. TXT, CSV, XML, JSON).",
+          "An audio-only file (e.g. MP3, WAV, AAC).",
+          "A file type that does not fall into any other category.",
+          "A streaming manifest file (e.g. HLS .m3u8, DASH .mpd) that references segmented media."
+        ]
       },
       "MessageInfoModel": {
         "allOf": [
@@ -35827,7 +36237,13 @@
           "ValidationError",
           "Error"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Information",
+          "Warning",
+          "ValidationError",
+          "Error"
+        ]
       },
       "MetadataTypes": {
         "enum": [
@@ -35945,7 +36361,121 @@
           "CustomType"
         ],
         "type": "string",
-        "description": "Note that this is a PARTIAL list of types that we need to know about"
+        "description": "Note that this is a PARTIAL list of types that we need to know about",
+        "x-enumNames": [
+          "DocumentContent",
+          "ComprehendKeyPhrases",
+          "ComprehendEntities",
+          "RekognitionImageIndexFaces",
+          "RekognitionImageSearchFaces",
+          "RekognitionImageLabels",
+          "RekognitionImageCelebrityRecognition",
+          "RekognitionVideoLabels",
+          "TextractAnalyzeDocument",
+          "Transcribe",
+          "TranscribeVtt",
+          "TranscribeTranslation",
+          "TranscribeVttTranslation",
+          "RekognitionVideoCelebrityRecognition",
+          "RekognitionVideoPersonTracking",
+          "RekognitionVideoFaceDetection",
+          "ImageInfo",
+          "Transcode",
+          "Clip",
+          "MediaInfo",
+          "RekognitionImageDetectText",
+          "RekognitionImageUnsafeContent",
+          "RekognitionVideoUnsafeContent",
+          "Screenshot",
+          "ThumbnailSheet",
+          "ThumbnailImage",
+          "RekognitionImageCustomLabels",
+          "PreviewImage",
+          "RekognitionVideoTextDetection",
+          "RekognitionVideoSegmentDetection",
+          "NomadVideoSegmentDetection",
+          "TranscribeMedical",
+          "PreviewAudio",
+          "Text",
+          "AssetManifest",
+          "IntervalSegments",
+          "TranscribeMedicalText",
+          "TranscribeMedicalTranslation",
+          "AdobeMetadata",
+          "AdobeMetadataText",
+          "ImageExif",
+          "TextractImageDetectText",
+          "AdSegments",
+          "Vmap",
+          "Vast",
+          "MediaTailorVideo",
+          "TranscribeSrt",
+          "TranscribeRaw",
+          "Subtitles",
+          "ProcessorJobs",
+          "OfficeDocument",
+          "TranscriptionContainer",
+          "ComprehendSentiment",
+          "ComprehendLanguage",
+          "OriginalSourceVideo",
+          "ImportManifest",
+          "TranscribeScc",
+          "TranscribeTtml",
+          "TranscribeDfxp",
+          "TranscribeSmptett",
+          "TranscribeXml",
+          "TranscribeQt",
+          "TranscribeRt",
+          "TranscribeSsa",
+          "TranscribeAss",
+          "TranscribeSbv",
+          "TranscribeSmi",
+          "TranscribeSami",
+          "TranscribeStl",
+          "TranscribeSub",
+          "AssociatedAsset",
+          "ContactSheetVTT",
+          "ContactSheetTimecodes",
+          "ContactSheetImage",
+          "RenderedImage",
+          "RokuBif",
+          "AzureImageAnalysis",
+          "AzureImageVectorize",
+          "AzureTextVectorize",
+          "ContentVectors",
+          "SportLogiqVideoAnalysis",
+          "AnimatedGif",
+          "NomadMediaTasks",
+          "GooglePhotosMetadata",
+          "TwelveLabsVideoAnalysis",
+          "BedrockImageAnalysis",
+          "BedrockTextVectorizer",
+          "BedrockImageVectorize",
+          "BedrockTextSummary",
+          "GeneratedImage",
+          "TranscodeIvsRecording",
+          "TranscriptSummary",
+          "SearchCache",
+          "WhisperTranscription",
+          "BitmovinSceneDetection",
+          "BedrockDataAutomation",
+          "BedrockSceneDetection",
+          "MobiusLabsLlmSegmentContent",
+          "AudioWaveform",
+          "CantoDetailJson",
+          "AudioId3",
+          "WasabiAir",
+          "NovaTextEmbedding",
+          "NovaImageEmbedding",
+          "NovaAudioEmbedding",
+          "NovaVideoEmbedding",
+          "NovaDocumentEmbedding",
+          "TwelveLabsBedrockVideoAnalysis",
+          "TwelveLabsVideoEmbedding",
+          "TwelveLabsAudioEmbedding",
+          "TwelveLabsImageEmbedding",
+          "CustomType"
+        ]
       },
       "MyContentModel": {
         "type": "object",
@@ -36514,7 +37044,19 @@
           "SessionDeactivated"
         ],
         "type": "string",
-        "description": "Indicates the status returned from a session ping/keep-alive request."
+        "description": "Indicates the status returned from a session ping/keep-alive request.",
+        "x-enumNames": [
+          "Normal",
+          "ChatDisabled",
+          "AccountExpired",
+          "SessionDeactivated"
+        ],
+        "x-enumDescriptions": [
+          "The session is active and healthy. No action needed.",
+          "Chat functionality has been disabled for this session.",
+          "The user's account has expired. The client should end the session and redirect to the login page.",
+          "The session has been deactivated (e.g., replaced by a newer login when single-session enforcement is enabled). The client should end the session."
+        ]
       },
       "PortalContentRequestModel": {
         "type": "object",
@@ -36613,7 +37155,11 @@
           "Replace",
           "Clear"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Replace",
+          "Clear"
+        ]
       },
       "PublishScheduleRequestModel": {
         "required": [
@@ -36682,7 +37228,17 @@
           7
         ],
         "type": "integer",
-        "format": "int32"
+        "format": "int32",
+        "x-enumNames": [
+          "Click",
+          "Play",
+          "Watch",
+          "Bookmark",
+          "Preview",
+          "Purchase",
+          "Like",
+          "Dislike"
+        ]
       },
       "RefreshTokenRequestModel": {
         "required": [
@@ -37682,7 +38238,13 @@
           "Newest",
           "NewestNotPlayed"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Random",
+          "RandomWithinDateRange",
+          "Newest",
+          "NewestNotPlayed"
+        ]
       },
       "ScheduleItemSourceTypes": {
         "enum": [
@@ -37691,14 +38253,25 @@
           "VideoAsset",
           "LiveChannel"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "PlaylistSchedule",
+          "SearchFilters",
+          "VideoAsset",
+          "LiveChannel"
+        ]
       },
       "ScheduleItemTypes": {
         "enum": [
           "Asset",
           "Dynamic"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Asset",
+          "Dynamic"
+        ],
+        "x-enumFlags": true
       },
       "ScheduleModel": {
         "type": "object",
@@ -37786,7 +38359,25 @@
           "Stopping",
           "Error"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Describes the current operational status of a live schedule.\r\nA schedule progresses through these states as it is started, run, and stopped.",
+        "x-enumNames": [
+          "New",
+          "Stopped",
+          "Starting",
+          "Running",
+          "Stopping",
+          "Error"
+        ],
+        "x-enumFlags": true,
+        "x-enumDescriptions": [
+          "The schedule has been defined but has not been started.",
+          "The schedule has been stopped and is no longer processing events.",
+          "The schedule is being activated and will begin processing events shortly.",
+          "The schedule is active and processing events according to the configured timeline.",
+          "The schedule is being deactivated and will stop processing new events.",
+          "The schedule encountered an error. Review the schedule details for more information."
+        ]
       },
       "ScheduleTypes": {
         "enum": [
@@ -37794,7 +38385,13 @@
           "IntelligentSchedule",
           "IntelligentPlaylist"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Playlist",
+          "IntelligentSchedule",
+          "IntelligentPlaylist"
+        ],
+        "x-enumFlags": true
       },
       "ScreenshotModel": {
         "type": "object",
@@ -37814,7 +38411,16 @@
           1
         ],
         "type": "integer",
-        "format": "int32"
+        "description": "Controls how multiple Nomad.Common.Search.SearchFilter conditions are combined in a search query.",
+        "format": "int32",
+        "x-enumNames": [
+          "And",
+          "Or"
+        ],
+        "x-enumDescriptions": [
+          "All filter conditions must match (logical AND). This is the default behaviour.",
+          "At least one filter condition must match (logical OR)."
+        ]
       },
       "SearchFieldModel": {
         "type": "object",
@@ -37853,15 +38459,18 @@
         "properties": {
           "fieldName": {
             "type": "string",
+            "description": "Gets or sets the name of the field to filter on.",
             "nullable": true
           },
           "operator": {
             "$ref": "#/components/schemas/SearchFilterOperators"
           },
           "includeNull": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Gets or sets a value indicating whether records where the field is null are included in results.\r\nWhen `true`, null values match alongside the normal operator evaluation."
           },
           "values": {
+            "description": "Gets or sets the value or array of values to compare against the field.\r\nPass a single value for scalar comparisons or a `string[]` / `object[]` for multi-value matching.",
             "nullable": true
           },
           "properties": {
@@ -37869,12 +38478,13 @@
             "additionalProperties": {
               "nullable": true
             },
-            "description": "Note that we convert all incoming keys to lower first char to help with serialization for JSON later",
+            "description": "Gets the dictionary of extended filter properties used for advanced or provider-specific filter options.",
             "nullable": true,
             "readOnly": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Represents a single field-level filter condition within a Nomad.Common.Search.SearchModel query.\r\nFilters are combined using the Nomad.Common.Search.SearchModel.FilterBinder operator (AND or OR)."
       },
       "SearchFilterOperators": {
         "enum": [
@@ -37891,7 +38501,34 @@
           10
         ],
         "type": "integer",
-        "format": "int32"
+        "description": "Defines the comparison operators available when building search filters.\r\nEach operator controls how a field value is compared to the supplied filter value.",
+        "format": "int32",
+        "x-enumNames": [
+          "Equals",
+          "NotEquals",
+          "Contains",
+          "NotContains",
+          "Like",
+          "NotLike",
+          "LessThan",
+          "GreaterThan",
+          "LessThanEquals",
+          "GreaterThanEquals",
+          "Prefix"
+        ],
+        "x-enumDescriptions": [
+          "Matches records where the field value exactly equals the supplied value.",
+          "Matches records where the field value does not equal the supplied value.",
+          "Matches records where the field value contains the supplied substring.",
+          "Matches records where the field value does not contain the supplied substring.",
+          "Matches records using a wildcard pattern on the field value (use * as the wildcard character).",
+          "Matches records where the field value does not match the supplied wildcard pattern.",
+          "Matches records where the field value is strictly less than the supplied value.",
+          "Matches records where the field value is strictly greater than the supplied value.",
+          "Matches records where the field value is less than or equal to the supplied value.",
+          "Matches records where the field value is greater than or equal to the supplied value.",
+          "Matches records where the field value begins with the supplied prefix string."
+        ]
       },
       "SearchModel": {
         "type": "object",
@@ -38283,6 +38920,7 @@
         "properties": {
           "fieldName": {
             "type": "string",
+            "description": "Gets or sets the name of the field to sort by.",
             "nullable": true
           },
           "sortType": {
@@ -38290,10 +38928,12 @@
           },
           "position": {
             "type": "integer",
+            "description": "Gets or sets the sort priority when multiple sort fields are specified. Lower values take precedence.",
             "format": "int32"
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Defines a single sort criterion applied to a Nomad.Common.Search.SearchModel query.\r\nMultiple Nomad.Common.Search.SearchSort entries can be added to Nomad.Common.Search.SearchModel.SortFields\r\nand are applied in ascending Nomad.Common.Search.SearchSort.Position order."
       },
       "SearchSortTypes": {
         "enum": [
@@ -38301,7 +38941,16 @@
           1
         ],
         "type": "integer",
-        "format": "int32"
+        "description": "Specifies the direction of a sort applied to a Nomad.Common.Search.SearchSort field.",
+        "format": "int32",
+        "x-enumNames": [
+          "Ascending",
+          "Descending"
+        ],
+        "x-enumDescriptions": [
+          "Sorts results from the lowest value to the highest value (A → Z, earliest → latest).",
+          "Sorts results from the highest value to the lowest value (Z → A, latest → earliest)."
+        ]
       },
       "SearchTextFields": {
         "enum": [
@@ -38319,7 +38968,22 @@
           "AI_Text",
           "AI_Captions"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "AssetDetails",
+          "ExactTitle",
+          "TextContents",
+          "Transcripts",
+          "CustomMetadata",
+          "ExifMetadata",
+          "Tags",
+          "Collections",
+          "RelatedContent",
+          "Annotations",
+          "AI_Labels",
+          "AI_Text",
+          "AI_Captions"
+        ]
       },
       "SecureOutputFieldStates": {
         "enum": [
@@ -38328,7 +38992,12 @@
           2
         ],
         "type": "integer",
-        "format": "int32"
+        "format": "int32",
+        "x-enumNames": [
+          "Hidden",
+          "Disabled",
+          "Editable"
+        ]
       },
       "SecurityModel": {
         "type": "object",
@@ -38370,7 +39039,14 @@
           "Administrator",
           "Guest"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Read",
+          "FileWrite",
+          "FolderWrite",
+          "Administrator",
+          "Guest"
+        ]
       },
       "SegmentModel": {
         "type": "object",
@@ -38720,7 +39396,14 @@
           5
         ],
         "type": "integer",
-        "format": "int32"
+        "format": "int32",
+        "x-enumNames": [
+          "New",
+          "Initializing",
+          "InitializingContent",
+          "Initialized",
+          "InitializationError"
+        ]
       },
       "StageLoginResponseModel": {
         "allOf": [
@@ -39003,7 +39686,31 @@
           "GlacierInstantRetrieval",
           "Outposts"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Identifies the S3 storage class of an asset object.\r\nStorage classes differ in durability, availability, retrieval latency, and cost.",
+        "x-enumNames": [
+          "Standard",
+          "ReducedRedundancy",
+          "Glacier",
+          "StandardInfrequentAccess",
+          "OneZoneInfrequentAccess",
+          "IntelligentTiering",
+          "DeepArchive",
+          "GlacierInstantRetrieval",
+          "Outposts"
+        ],
+        "x-enumFlags": true,
+        "x-enumDescriptions": [
+          "General-purpose storage for frequently accessed data. Highest availability and lowest latency.",
+          "Lower-cost storage with reduced redundancy. Suitable for non-critical, reproducible data. (Legacy AWS class.)",
+          "Long-term archival storage. Retrieval takes minutes to hours and incurs a restore fee.",
+          "Infrequently accessed data stored across multiple availability zones. Lower cost than Standard; retrieval milliseconds.",
+          "Infrequently accessed data stored in a single availability zone. Lower cost than Standard-IA; not resilient to AZ loss.",
+          "Automatically moves objects between access tiers based on access patterns to optimise cost.",
+          "Lowest-cost archival storage for data rarely if ever retrieved. Retrieval takes 12 hours or longer.",
+          "Archival storage with millisecond retrieval latency. Suitable for archives accessed occasionally.",
+          "On-premises storage using AWS Outposts infrastructure."
+        ]
       },
       "StreamsModel": {
         "type": "object",
@@ -39133,7 +39840,12 @@
           "Concise",
           "Transcript"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Verbose",
+          "Concise",
+          "Transcript"
+        ]
       },
       "TextItemGroupModel": {
         "type": "object",
@@ -39221,7 +39933,19 @@
           3
         ],
         "type": "integer",
-        "format": "int32"
+        "format": "int32",
+        "x-enumNames": [
+          "DocX",
+          "Text",
+          "SRT",
+          "VTT"
+        ],
+        "x-enumDescriptions": [
+          "MS Office DocX.",
+          "Plain Text.",
+          "SRT.",
+          "VTT."
+        ]
       },
       "TranscriptionV2Model": {
         "type": "object",
@@ -39349,7 +40073,19 @@
           "Replace",
           "AssetReplace"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Cancel",
+          "Continue",
+          "Replace",
+          "AssetReplace"
+        ],
+        "x-enumDescriptions": [
+          "If the file already exists on the server then an error will occur",
+          "If the file already exists on the server, then it will be resumed",
+          "If the file already exists on the server, then the existing one will be erased and the new one will take it's place",
+          "If the asset already exists on the server, then the existing one will be replaced and the new one will take it's place"
+        ]
       },
       "UploadReplaceOptions": {
         "enum": [
@@ -39361,7 +40097,16 @@
           "RecreateSubtitles",
           "RecreateTranscodes"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "ReplaceDisplayName",
+          "ReplaceDisplayDate",
+          "ReplaceLanguage",
+          "RecreateThumbnail",
+          "RecreatePreview",
+          "RecreateSubtitles",
+          "RecreateTranscodes"
+        ]
       },
       "UserBehaviorProfileListModel": {
         "type": "object",
@@ -39864,7 +40609,27 @@
           "DeletedInvite"
         ],
         "type": "string",
-        "description": "Indicates the current status of a user session."
+        "description": "Indicates the current status of a user session.",
+        "x-enumNames": [
+          "Normal",
+          "ChatDisabled",
+          "SessionReplaced",
+          "Deactivated",
+          "SharedAccess",
+          "PendingInvite",
+          "Expired",
+          "DeletedInvite"
+        ],
+        "x-enumDescriptions": [
+          "The session is active and the user has full access.",
+          "The user's chat functionality has been restricted for this session.",
+          "The session was replaced by a newer login (single-session enforcement).",
+          "The session has been deactivated by an administrator.",
+          "The session belongs to a guest user with shared content access.",
+          "The user has a pending invitation that has not yet been accepted.",
+          "The session has expired due to inactivity or account expiration.",
+          "The user's invitation was revoked and their session was terminated."
+        ]
       },
       "UserVideoTrackingModel": {
         "type": "object",
@@ -40332,7 +41097,12 @@
           "Watchlist",
           "LiveStream"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Undefined",
+          "Watchlist",
+          "LiveStream"
+        ]
       },
       "VideoTrackingEvents": {
         "enum": [
@@ -40344,7 +41114,16 @@
           "Hide",
           "LiveStream"
         ],
-        "type": "string"
+        "type": "string",
+        "x-enumNames": [
+          "Progress",
+          "FirstQuartile",
+          "Midpoint",
+          "ThirdQuartile",
+          "Complete",
+          "Hide",
+          "LiveStream"
+        ]
       },
       "ViewportModel": {
         "type": "object",
