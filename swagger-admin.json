@@ -10,11 +10,11 @@
     "license": {
       "name": "MIT"
     },
-    "version": "2026-04"
+    "version": "2026.9.0"
   },
   "servers": [
     {
-      "url": "https://sample-site.com/api"
+      "url": "https://localhost:44395/api"
     }
   ],
   "paths": {
@@ -1058,8 +1058,8 @@
         "tags": [
           "AdminAsset"
         ],
-        "summary": "Retrieves child folder nodes for a given parent folder in the asset tree.",
-        "description": "\r\n<b>Behavior:</b> Returns a paginated, sortable list of child folders under the specified parent.\r\n            If the parent is the root (empty GUID), all top-level storage bucket folders are returned.\r\n            Results include folder metadata such as media type, content length, and modification date.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
+        "summary": "Legacy endpoint. Retrieves child folder nodes for a given parent folder in the asset tree.",
+        "description": "\r\n<b>Deprecated:</b> This endpoint is superseded. Use the search API for folder browsing instead.\r\n\r\n<b>Behavior:</b> Returns a paginated, sortable list of child folders under the specified parent.\r\n            If the parent is the root (empty GUID), all top-level storage bucket folders are returned.\r\n            Results include folder metadata such as media type, content length, and modification date.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
         "parameters": [
           {
             "name": "folderId",
@@ -1540,21 +1540,6 @@
               }
             },
             "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeAssetPropertiesModel"
-              }
-            },
-            "application/xml": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeAssetPropertiesModel"
-              }
-            },
-            "text/xml": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeAssetPropertiesModel"
-              }
-            },
-            "application/*+xml": {
               "schema": {
                 "$ref": "#/components/schemas/ChangeAssetPropertiesModel"
               }
@@ -2404,12 +2389,12 @@
           "AdminAsset"
         ],
         "summary": "Retrieves the list of uploads for the current user.",
-        "description": "\r\n<b>Behavior:</b> Returns all uploads initiated by the current user. By default, only\r\n            in-progress uploads are returned. Set includeCompletedUploads to true\r\n            to also include completed uploads.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
+        "description": "\r\n<b>Prefer `GET /api/asset-queue/transfers?direction=Upload`.</b> That endpoint pages\r\n            properly, filters by status, reports progress and covers downloads with the same shape. This\r\n            one returns a single capped page and exists for existing clients.\r\n\r\n<b>Behavior:</b> Returns the current user's uploads, most recent first. By default only\r\n            unfinished uploads are returned. Set includeCompletedUploads to true to\r\n            include finished ones, which are now retained as history rather than deleted on completion.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token. No longer requires an administrator:\r\n            listing your own uploads is not an administrative act, and requiring it was the reason\r\n            ordinary users could not see their own upload queue.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
         "parameters": [
           {
             "name": "includeCompletedUploads",
             "in": "query",
-            "description": "If true, includes completed uploads in the results. If false, only in-progress uploads are returned.",
+            "description": "If true, includes finished uploads in the results.",
             "schema": {
               "type": "boolean"
             }
@@ -2453,7 +2438,7 @@
           "AdminAsset"
         ],
         "summary": "Retrieves the individual upload parts for a multipart upload.",
-        "description": "\r\n<b>Behavior:</b> Returns all parts associated with the specified upload, including both\r\n            completed and pending parts. Each part includes its upload URL, part number, and completion status.\r\n            Use this to track the progress of a multipart upload or to resume a partially completed upload.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
+        "description": "\r\n<b>Behavior:</b> Returns all parts associated with the specified upload, including both\r\n            completed and pending parts. Each part includes its upload URL, part number, and completion status.\r\n            Use this to track the progress of a multipart upload or to resume a partially completed upload.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token, and the upload must belong to the\r\n            caller. This response contains freshly signed write URLs for every part, so an upload owned by\r\n            another user reports as not found rather than being returned.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated, or 404 if no\r\n            such upload belongs to the caller.",
         "parameters": [
           {
             "name": "id",
@@ -2482,6 +2467,75 @@
           },
           "401": {
             "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such upload belongs to the caller.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/admin/asset/upload/reap-stale": {
+      "post": {
+        "tags": [
+          "AdminAsset"
+        ],
+        "summary": "Reclaims transfers that have stopped making progress.",
+        "description": "\r\n<b>Behavior:</b> Sweeps recent days for uploads that have stalled, releases the\r\n            storage-side multipart upload behind each one, drops its part records, and marks the\r\n            transfer cancelled so retention can remove it. Without this an abandoned upload accrues\r\n            storage cost indefinitely and keeps appearing to the user as still running.\r\n\r\n<b>Scheduling:</b> This runs automatically from the daily system schedule. This\r\n            endpoint is for running it on demand, which is mainly useful for verifying a new environment\r\n            or clearing a known backlog.\r\n\r\n<b>Safety:</b> Only transfers with no progress for longer than the configured\r\n            staleness window are touched, so it is safe to run repeatedly and safe to run while uploads\r\n            are in flight.\r\n\r\n<b>Authorization:</b> Requires a system administrator.",
+        "parameters": [
+          {
+            "name": "lookBackDays",
+            "in": "query",
+            "description": "How many days of records to sweep. Defaults to 7.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The sweep completed and returned the number reclaimed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Caller is not a system administrator.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3558,8 +3612,8 @@
         "tags": [
           "AdminAsset"
         ],
-        "summary": "Retrieves the full detail model for an asset, including all media properties and related assets.",
-        "description": "\r\n<b>Behavior:</b> Returns comprehensive asset details including media properties (dimensions,\r\n            duration, codec), URLs for streaming and preview, related assets (proxies, thumbnails, subtitles),\r\n            AI-generated metadata, and processing status.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.\r\n            Returns 404 if the asset is not found.",
+        "summary": "Legacy endpoint for retrieving full asset detail. Prefer the non-admin asset detail endpoint.",
+        "description": "\r\n<b>Legacy:</b> Prefer the non-admin asset detail endpoint for new integrations.\r\n\r\n<b>Behavior:</b> Returns comprehensive asset details including media properties (dimensions,\r\n            duration, codec), URLs for streaming and preview, related assets (proxies, thumbnails, subtitles),\r\n            AI-generated metadata, and processing status.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.\r\n            Returns 404 if the asset is not found.",
         "parameters": [
           {
             "name": "id",
@@ -4318,6 +4372,122 @@
         "responses": {
           "200": {
             "description": "The clip operation was initiated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The asset was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/asset/{id}/auto-clip": {
+      "post": {
+        "tags": [
+          "Asset"
+        ],
+        "summary": "Automatically detects and clips the content region of a video asset by analyzing\r\nperceptual hashes of frames across HLS TS chunks to find preroll and postroll boundaries.",
+        "description": "\r\n<b>Behavior:</b> Parses the asset's HLS manifest, samples frames from TS chunks using\r\n            an adaptive binary search strategy, computes perceptual hashes, and determines where the\r\n            looping preroll ends and the postroll begins. The detected timecodes are then passed to the\r\n            standard clip operation to create a new clip asset.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> A new clip asset is created asynchronously.\r\n\r\n<b>Error Scenarios:</b> Returns 400 if the request body is missing or invalid.\r\n            Returns 401 if the caller is not authenticated.\r\n            Returns 404 if the asset is not found.\r\n            Returns 500 if boundary detection fails (e.g. no content region found).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The unique identifier of the video asset to auto-clip.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "background",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The auto-clip parameters including title, output folder, and optional threshold override.",
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoClipModel"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoClipModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoClipModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoClipModel"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoClipModel"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoClipModel"
+              }
+            },
+            "application/*+xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoClipModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The auto-clip operation was initiated successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5963,21 +6133,6 @@
               "schema": {
                 "$ref": "#/components/schemas/ChangeAssetPropertiesModel"
               }
-            },
-            "application/xml": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeAssetPropertiesModel"
-              }
-            },
-            "text/xml": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeAssetPropertiesModel"
-              }
-            },
-            "application/*+xml": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeAssetPropertiesModel"
-              }
             }
           }
         },
@@ -6132,15 +6287,138 @@
         ]
       }
     },
-    "/asset-queue": {
+    "/asset-queue/transfers": {
+      "get": {
+        "tags": [
+          "AssetQueue"
+        ],
+        "summary": "Lists the caller's transfers, newest first.",
+        "description": "\r\n<b>Behavior:</b> Returns one page of the caller's own transfers. By default both\r\n            directions are included and the two tables are merged in date order.\r\n\r\n<b>Paging:</b> Pass the `nextPageOffset` from a response back as `cursor` to\r\n            continue. Cursors are positions rather than offsets, so paging stays correct while new\r\n            transfers are being created. A null `nextPageOffset` means the end has been reached.\r\n\r\n<b>Totals:</b>\r\n  `totalItemCount` is always -1. A real total would mean counting the\r\n            caller's whole history on every page, and a client only needs to know whether more exist.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token. Only the caller's own transfers\r\n            are ever returned.",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Which side to include. Defaults to both.",
+            "schema": {
+              "$ref": "#/components/schemas/TransferDirections"
+            }
+          },
+          {
+            "name": "statuses",
+            "in": "query",
+            "description": "Optional statuses to include. Omit for all.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/AssetTransferStatuses"
+              }
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "How many to return, capped at 200.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Opaque position from a previous response.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "oldestFirst",
+            "in": "query",
+            "description": "Return oldest first instead of newest first.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The page of transfers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResultModelTransferItemModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/asset-queue/transfers/summary": {
+      "get": {
+        "tags": [
+          "AssetQueue"
+        ],
+        "summary": "Counts the caller's transfers by state.",
+        "description": "\r\n<b>Behavior:</b> Returns per-status counts for both directions plus active and failed\r\n            totals, for badge counts and for deciding whether anything is still moving.\r\n\r\n<b>Polling:</b> This is the endpoint to poll, not the full list. It carries an entity\r\n            tag, so sending `If-None-Match` makes an unchanged poll cost a 304 with no body.\r\n\r\n<b>Scale note:</b> Counts are taken over the caller's most recent records rather than\r\n            their entire history, so a user with a very long history sees recent counts.",
+        "responses": {
+          "200": {
+            "description": "The counts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSummaryModel"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nothing has changed since the supplied entity tag."
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/asset-queue/downloads": {
       "post": {
         "tags": [
           "AssetQueue"
         ],
-        "summary": "Adds assets to the download queue for batch downloading.",
-        "description": "\r\n<b>Behavior:</b> Adds the specified assets to the user's download queue. Queued assets can be\r\n            processed for bulk download at a later time. This is useful for collecting multiple assets\r\n            before initiating a single download operation.\r\n\r\n<b>Folder and Collection Support:</b> If a folder or collection ID is provided, all file assets\r\n            within that folder or collection are automatically added to the queue. Only file assets are queued;\r\n            folder and collection IDs themselves are never added.\r\n\r\n<b>Threshold Logic:</b> If the request contains 50 or fewer asset IDs, they are\r\n            processed synchronously. If more than 50 asset IDs are provided, a background task is queued instead.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> New entries are created in the download queue, or a background task is queued.\r\n\r\n<b>Error Scenarios:</b> Returns 400 if no asset IDs are provided. Returns 401 if the caller\r\n            is not authenticated.",
+        "summary": "Adds assets to the caller's download queue.",
+        "description": "\r\n<b>Behavior:</b> Queues the given assets. Folders and collections are expanded to the\r\n            file assets inside them; folder and collection ids are never queued themselves.\r\n\r\n<b>Duplicates:</b> An asset already queued or in flight is left alone. One that\r\n            previously finished, failed or was cancelled is retried in place as a new attempt rather than\r\n            added a second time.\r\n\r\n<b>Large requests:</b> Requests that expand beyond the configured inline limit are\r\n            handed to a background worker and this returns immediately.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.",
         "requestBody": {
-          "description": "The assets to add to the download queue.",
+          "description": "The assets to queue.",
           "content": {
             "application/json-patch+json": {
               "schema": {
@@ -6181,10 +6459,10 @@
         },
         "responses": {
           "200": {
-            "description": "The items were added to the download queue or queued for background processing."
+            "description": "The assets were queued or handed to a background worker."
           },
           "400": {
-            "description": "No asset IDs were provided.",
+            "description": "No asset ids were provided.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6195,6 +6473,74 @@
           },
           "401": {
             "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/asset-queue/{direction}/{id}": {
+      "get": {
+        "tags": [
+          "AssetQueue"
+        ],
+        "summary": "Fetches one of the caller's transfers.",
+        "description": "\r\n<b>Authorization:</b> Requires a valid Bearer token. A transfer belonging to another\r\n            user reports as not found.",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "path",
+            "description": "Either `uploads` or `downloads`.",
+            "required": true,
+            "schema": {
+              "pattern": "^uploads|downloads$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The transfer id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The transfer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferItemModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such transfer belongs to the caller.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6214,54 +6560,103 @@
         "tags": [
           "AssetQueue"
         ],
-        "summary": "Updates the properties of a download queue item.",
-        "description": "\r\n<b>Behavior:</b> Updates an existing entry in the download queue, such as changing its\r\n            priority or status.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> The download queue entry is updated.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
+        "summary": "Reports status or progress for one of the caller's transfers.",
+        "description": "\r\n<b>Behavior:</b> Records the reported state. Reporting the in-progress state for the\r\n            direction is a progress update; reporting a final state ends the transfer.\r\n\r\n<b>Throttling:</b> Progress reports representing very little change since the last one\r\n            are accepted and discarded rather than written. Clients may report as often as they like;\r\n            this endpoint decides what is worth storing.\r\n\r\n<b>Upload progress:</b> Ignored for uploads. The server counts bytes itself as each\r\n            part is confirmed, so upload progress does not depend on the client staying alive.\r\n\r\n<b>Final states:</b> A transfer that has already finished cannot be reopened, and a\r\n            late report against one is ignored rather than treated as an error. Use requeue to retry.",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "path",
+            "description": "Either `uploads` or `downloads`.",
+            "required": true,
+            "schema": {
+              "pattern": "^uploads|downloads$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The transfer id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "requestBody": {
-          "description": "The updated download queue item properties.",
+          "description": "The reported state and progress.",
           "content": {
             "application/json-patch+json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateDownloadQueueModel"
+                "$ref": "#/components/schemas/UpdateTransferModel"
               }
             },
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateDownloadQueueModel"
+                "$ref": "#/components/schemas/UpdateTransferModel"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateDownloadQueueModel"
+                "$ref": "#/components/schemas/UpdateTransferModel"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateDownloadQueueModel"
+                "$ref": "#/components/schemas/UpdateTransferModel"
               }
             },
             "application/xml": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateDownloadQueueModel"
+                "$ref": "#/components/schemas/UpdateTransferModel"
               }
             },
             "text/xml": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateDownloadQueueModel"
+                "$ref": "#/components/schemas/UpdateTransferModel"
               }
             },
             "application/*+xml": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateDownloadQueueModel"
+                "$ref": "#/components/schemas/UpdateTransferModel"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "The queue item was updated."
+            "description": "The updated transfer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferItemModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The reported state is not a legal move for this transfer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           },
           "401": {
             "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such transfer belongs to the caller.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6276,15 +6671,185 @@
             "Bearer": [ ]
           }
         ]
-      },
+      }
+    },
+    "/asset-queue/{direction}/{id}/cancel": {
+      "post": {
+        "tags": [
+          "AssetQueue"
+        ],
+        "summary": "Cancels one of the caller's transfers.",
+        "description": "\r\n<b>Behavior:</b> Ends the transfer. For an upload this also releases the storage-side\r\n            multipart upload, so an abandoned upload stops accruing storage cost.\r\n\r\n<b>Error Scenarios:</b> Returns 400 if the transfer has already finished.",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "path",
+            "description": "Either `uploads` or `downloads`.",
+            "required": true,
+            "schema": {
+              "pattern": "^uploads|downloads$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The transfer id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The cancelled transfer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferItemModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The transfer had already finished.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such transfer belongs to the caller.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/asset-queue/{direction}/{id}/requeue": {
+      "post": {
+        "tags": [
+          "AssetQueue"
+        ],
+        "summary": "Retries one of the caller's finished transfers.",
+        "description": "\r\n<b>Behavior:</b> Returns the transfer to the queue as a new attempt, keeping its\r\n            history and incrementing its attempt count, rather than creating a second record.\r\n\r\n<b>Error Scenarios:</b> Returns 400 if the transfer has not finished yet.",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "path",
+            "description": "Either `uploads` or `downloads`.",
+            "required": true,
+            "schema": {
+              "pattern": "^uploads|downloads$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The transfer id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requeued transfer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferItemModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The transfer has not finished, so there is nothing to retry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such transfer belongs to the caller.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/asset-queue/{direction}": {
       "delete": {
         "tags": [
           "AssetQueue"
         ],
-        "summary": "Removes entries from the download queue.",
-        "description": "\r\n<b>Behavior:</b> Deletes the specified entries from the download queue. The entries are\r\n            identified by their unique download queue IDs.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> The specified queue entries are permanently removed.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
+        "summary": "Removes transfers from the caller's queue.",
+        "description": "\r\n<b>Behavior:</b> Removes the given records. Ids that do not belong to the caller are\r\n            skipped rather than failing the request, and the response reports how many were removed.\r\n\r\n<b>Note:</b> This removes the bookkeeping only. It does not cancel work in flight -\r\n            cancel the transfer first if that is the intent.",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "path",
+            "description": "Either `uploads` or `downloads`.",
+            "required": true,
+            "schema": {
+              "pattern": "^uploads|downloads$",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
-          "description": "The list of download queue entry IDs to delete.",
+          "description": "The transfers to remove.",
           "content": {
             "application/json-patch+json": {
               "schema": {
@@ -6353,7 +6918,25 @@
         },
         "responses": {
           "200": {
-            "description": "The queue entries were deleted."
+            "description": "The number removed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No transfer ids were provided.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           },
           "401": {
             "description": "Caller is not authenticated.",
@@ -11180,6 +11763,97 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/liveChannel/{channelId}/participantToken": {
+      "get": {
+        "tags": [
+          "LiveChannel"
+        ],
+        "summary": "Generates a short-lived IVS participant token for viewing a real-time live channel.",
+        "description": "\r\n<b>Behavior:</b> Authenticates the caller via the Nomad JWT and returns a participant\r\n            token that the client passes to the amazon-ivs-web-broadcast SDK Stage constructor.\r\n            Tokens are valid for up to 60 minutes (the AWS-imposed ceiling) and are single-use per SDK join attempt.\r\n            The frontend should re-request a token and reconnect when the SDK fires a disconnect event\r\n            with reason TOKEN_EXPIRED.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token. The caller must have at least\r\n            Read permission on the channel's security groups.\r\n\r\n<b>Error Scenarios:</b>\r\n            Returns 400 if the channel is not a Realtime type.\r\n            Returns 403 if the caller lacks Read permission on the channel.\r\n            Returns 404 if the channel is not found.\r\n            Returns 409 if the channel is not in a Running state.\r\n            Returns 502 if the AWS CreateParticipantToken call fails.",
+        "parameters": [
+          {
+            "name": "channelId",
+            "in": "path",
+            "description": "The unique identifier of the live channel.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The participant token was generated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParticipantTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The channel is not a Realtime type.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Caller does not have Read access to this channel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The channel was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The channel is not in a Running state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The AWS CreateParticipantToken call failed."
           }
         },
         "security": [
@@ -16433,6 +17107,64 @@
         ]
       }
     },
+    "/admin/search/analyze-mapping-conflicts": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Scans all DynamoDB content definitions and identifies identifier field mapping conflicts.",
+        "description": "\r\n<b>Behavior:</b> Dry-runs the same identifier-building logic used during indexing across a sample\r\n            of records from every searchable DynamoDB content definition. When the same identifier field name\r\n            produces different OpenSearch mapping types across content definitions (e.g. one stores \"permission\"\r\n            as a LookupModel object while another stores it as plain text), a conflict is reported with both\r\n            content definition names, a sample record ID, and a sample value from each side of the conflict.\r\n\r\n<b>Use case:</b> Run this before re-initializing the OpenSearch index to identify which content\r\n            definitions have mis-aligned identifier field types that will cause mapping errors during indexing.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token and system administrator role.\r\n\r\n<b>Side Effects:</b> Read-only. Does not modify the index or any data.",
+        "parameters": [
+          {
+            "name": "maxRecordsPerContentDef",
+            "in": "query",
+            "description": "Maximum number of records to sample per content definition. Defaults to 50.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analysis completed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchMappingConflictReport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Caller is authenticated but does not have system administrator access.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/admin/search/{id}": {
       "get": {
         "tags": [
@@ -19638,10 +20370,16 @@
           "Postroll"
         ],
         "type": "string",
+        "description": "Indicates where within a video an advertisement slot is positioned.",
         "x-enumNames": [
           "Preroll",
           "Midroll",
           "Postroll"
+        ],
+        "x-enumDescriptions": [
+          "Ad slot before the video content begins (time offset zero).",
+          "Ad slot in the middle of the video content.",
+          "Ad slot after the video content ends."
         ]
       },
       "AddAnnotationModel": {
@@ -20716,6 +21454,7 @@
           "Cancelled"
         ],
         "type": "string",
+        "description": "The lifecycle state of a single asset transfer, in either direction.",
         "x-enumNames": [
           "Queued",
           "Downloading",
@@ -20724,7 +21463,14 @@
           "Complete",
           "Cancelled"
         ],
-        "x-enumFlags": true
+        "x-enumDescriptions": [
+          "Transfer is queued and waiting to start.",
+          "Asset is being downloaded from the source location.",
+          "Asset is being uploaded to the destination location.",
+          "Transfer failed due to an error.",
+          "Transfer completed successfully.",
+          "Transfer was cancelled before completion."
+        ]
       },
       "AssetTypes": {
         "enum": [
@@ -20789,6 +21535,31 @@
             "type": "string",
             "description": "Gets or sets the date the original upload was started",
             "format": "date-time"
+          },
+          "transferStatus": {
+            "$ref": "#/components/schemas/AssetTransferStatuses"
+          },
+          "completePercentage": {
+            "type": "number",
+            "description": "Gets or sets percent complete, 0 to 100.",
+            "format": "float",
+            "nullable": true
+          },
+          "bytesTransferred": {
+            "type": "integer",
+            "description": "Gets or sets how many bytes have been confirmed as uploaded.",
+            "format": "int64"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "Gets or sets the failure reason, when the upload failed.",
+            "nullable": true
+          },
+          "completedDate": {
+            "type": "string",
+            "description": "Gets or sets when the upload reached a final state.",
+            "format": "date-time",
+            "nullable": true
           },
           "parts": {
             "type": "array",
@@ -20957,48 +21728,58 @@
         "properties": {
           "id": {
             "type": "string",
+            "description": "Gets or sets the unique identifier of the audio track.",
             "format": "uuid"
           },
           "bitRate": {
             "type": "integer",
+            "description": "Gets or sets the audio bit rate in bits per second.",
             "format": "int32",
             "nullable": true
           },
           "samplingRate": {
             "type": "integer",
+            "description": "Gets or sets the audio sampling rate in Hz.",
             "format": "int32",
             "nullable": true
           },
           "numChannels": {
             "type": "integer",
+            "description": "Gets or sets the number of audio channels (e.g., 1 for mono, 2 for stereo).",
             "format": "int32",
             "nullable": true
           },
           "format": {
             "type": "string",
+            "description": "Gets or sets the audio codec or format name (e.g., AAC, MP3).",
             "nullable": true
           },
           "frameRate": {
             "type": "number",
+            "description": "Gets or sets the frame rate of the audio stream.",
             "format": "double",
             "nullable": true
           },
           "frameCount": {
             "type": "integer",
+            "description": "Gets or sets the total number of audio frames.",
             "format": "int64",
             "nullable": true
           },
           "bitDepth": {
             "type": "integer",
+            "description": "Gets or sets the bit depth of the audio samples.",
             "format": "int32",
             "nullable": true
           },
           "bitRateMode": {
             "type": "string",
+            "description": "Gets or sets the bit rate mode (e.g., CBR, VBR).",
             "nullable": true
           },
           "durationSeconds": {
             "type": "number",
+            "description": "Gets or sets the duration of the audio track in seconds.",
             "format": "double",
             "nullable": true
           },
@@ -21007,6 +21788,7 @@
           },
           "trackPosition": {
             "type": "integer",
+            "description": "Gets or sets the zero-based index of this track within the media container.",
             "format": "int32",
             "nullable": true
           },
@@ -21015,10 +21797,12 @@
             "items": {
               "$ref": "#/components/schemas/AudioTrackModel"
             },
+            "description": "Gets or sets the source audio tracks that were mixed to produce this track; empty for original tracks.",
             "nullable": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Technical metadata for a single audio track within a media asset."
       },
       "AuthProvider": {
         "type": "object",
@@ -21045,6 +21829,38 @@
           }
         },
         "additionalProperties": false
+      },
+      "AutoClipModel": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ClipModel"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "similarityThresholdOverride": {
+                "type": "number",
+                "description": "Gets or sets an optional per-request similarity threshold override (0.0-1.0).\r\nWhen null, the value from ManifestClipSettings is used.\r\nHigher values require greater similarity to the reference cluster to be classified as preroll/postroll.",
+                "format": "double",
+                "nullable": true
+              },
+              "fullScan": {
+                "type": "boolean",
+                "description": "Gets or sets a value indicating whether to hash every TS chunk before running the\r\ngallop algorithm. When true, the saved ManifestHashScan asset will contain hashes\r\nfor the full video rather than only the chunks probed during detection.\r\nWhen false (default), only chunks touched by the gallop and binary search are hashed."
+              },
+              "submitClipJob": {
+                "type": "boolean",
+                "description": "Gets or sets a per-request override for whether the detected content region is\r\nimmediately submitted to the transcoder as a clip job.\r\nWhen null, the value from ManifestClipSettings.AutoSubmitClipJob is used.\r\nSet false to detect and persist boundaries only, leaving the clip submission\r\nto a human review step that calls the regular clip endpoint.",
+                "nullable": true
+              },
+              "detectionMode": {
+                "$ref": "#/components/schemas/BoundaryDetectionMode"
+              }
+            },
+            "additionalProperties": false
+          }
+        ],
+        "description": "Represents a request to automatically detect and clip the content region of a video asset\r\nby finding its preroll/postroll boundaries — from frame perceptual hashes, from the audio\r\nenvelope, or from both."
       },
       "AvailabilityModel": {
         "type": "object",
@@ -21127,51 +21943,52 @@
         "properties": {
           "contentDefinition": {
             "type": "string",
-            "description": "Gets or sets the content definition string name of the content records that should be affected\r\nLike asset, video, etc",
+            "description": "Gets or sets the schema name of the content definition.",
             "nullable": true
           },
           "contentId": {
             "type": "string",
-            "description": "Gets or sets the ID of the content record to apply the new or removed attributes",
+            "description": "Gets or sets the identifier of the parent content record.",
             "format": "uuid"
           },
           "createNew": {
             "type": "boolean",
-            "description": "Gets or sets a value indicating whether defaults to False. If true, then the attribute will be added if it doesn't already exist with a matching name"
+            "description": "Gets or sets a value indicating whether the operation creates a new child record rather than associating an existing one."
           },
           "childId": {
             "type": "string",
-            "description": "Gets the ID of the child attribute that's intended to be overridden with the actual value",
+            "description": "Gets the identifier of the child content record.",
             "format": "uuid",
             "nullable": true,
             "readOnly": true
           },
           "childPropertyName": {
             "type": "string",
-            "description": "Gets the name of the child attribute name used in the partial return class",
+            "description": "Gets the property name on the content definition that holds the child relationship.",
             "nullable": true,
             "readOnly": true
           },
           "indexPropertyName": {
             "type": "string",
-            "description": "Gets the name of the index property used in the existence checks",
+            "description": "Gets the property name used as the existence-check index key.",
             "nullable": true,
             "readOnly": true
           },
           "name": {
             "type": "string",
-            "description": "Gets or sets the name of the collection that should be added or removed. If the name and the collectionId are both specified, the name is ignored.",
+            "description": "Gets or sets the display name of the content record.",
             "nullable": true
           },
           "contentDefinitionId": {
             "type": "string",
-            "description": "Gets the id of the metadata content defintion, i.e. tags, collections",
+            "description": "Gets the identifier of the content definition.",
             "format": "uuid",
             "nullable": true,
             "readOnly": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Abstract base for content operation models that target a child content relationship."
       },
       "BasicListResultModelPartialModel": {
         "type": "object",
@@ -21183,15 +22000,17 @@
               "additionalProperties": { },
               "description": "A dictionary-based model that extends CaseInsensitiveDictionary. Contains a primary key Id (Guid) and dynamic key-value pairs representing entity properties. Use GetProperty<T>(key) to access typed values."
             },
+            "description": "Gets or sets the items on this page.",
             "nullable": true
           },
           "totalItemCount": {
             "type": "integer",
+            "description": "Gets or sets the total number of items across all pages, or -1 when the total is not calculated.",
             "format": "int64"
           }
         },
         "additionalProperties": false,
-        "description": "A simple list result containing Items of the specified type and TotalItemCount for the total number of matching records."
+        "description": "A minimal paginated list result containing items and a total count."
       },
       "BatchModel": {
         "type": "object",
@@ -21201,11 +22020,13 @@
           },
           "contentDefinitionId": {
             "type": "string",
+            "description": "Gets or sets the optional content definition that scopes the operation.",
             "format": "uuid",
             "nullable": true
           },
           "schemaName": {
             "type": "string",
+            "description": "Gets or sets the optional schema name that identifies the content definition by name.",
             "nullable": true
           },
           "targetIds": {
@@ -21214,10 +22035,12 @@
               "type": "string",
               "format": "uuid"
             },
+            "description": "Gets or sets the identifiers of the records the action should be applied to.",
             "nullable": true
           },
           "userId": {
             "type": "string",
+            "description": "Gets or sets the user on whose behalf the action is performed.",
             "format": "uuid"
           },
           "actionArguments": {
@@ -21225,15 +22048,17 @@
             "additionalProperties": {
               "nullable": true
             },
-            "description": "Note that we convert all incoming keys to lower first char to help with serialization for JSON later",
+            "description": "Gets or sets arbitrary key-value arguments consumed by the specific action handler.",
             "nullable": true
           },
           "resolverExempt": {
             "type": "boolean",
+            "description": "Gets or sets a value indicating whether the content resolver pipeline is bypassed for this action.",
             "nullable": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Payload for a batch operation targeting one or more content records."
       },
       "BatchResultModel": {
         "allOf": [
@@ -21245,7 +22070,7 @@
             "additionalProperties": false
           }
         ],
-        "description": "Contains a list of PartialModel items representing the results of a batch operation, along with TotalItemCount indicating how many items were processed."
+        "description": "Result of a batch operation, containing a partial update record for each processed item."
       },
       "BigDecimal": {
         "type": "object",
@@ -21302,6 +22127,26 @@
           }
         },
         "additionalProperties": false
+      },
+      "BoundaryDetectionMode": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "description": "Selects which signal auto-clip uses to locate the preroll/postroll boundaries.",
+        "format": "int32",
+        "x-enumNames": [
+          "PerceptualHash",
+          "Audio",
+          "Hybrid"
+        ],
+        "x-enumDescriptions": [
+          "Perceptual hashing of extracted video frames (default; original behaviour).",
+          "Audio envelope analysis of the muxed audio track.",
+          "Audio locates the boundaries and perceptual hashing runs as a second opinion,\r\n            raising the reported confidence when the two agree and lowering it when they do not."
+        ]
       },
       "BoundingBoxModel": {
         "type": "object",
@@ -21368,15 +22213,25 @@
           },
           "availableStartDate": {
             "type": "string",
-            "description": "Gets or sets the availability starting date of the asset for entitlement purposes\r\nMinValue is used to differentiate between null values and missing properties\r\nWe technically want null so we can clear the date.",
+            "description": "Gets or sets the availability starting date of the asset for entitlement purposes.\r\n\r\nOmit the key to leave the existing value unchanged; send an explicit null to clear it.\r\nPresence is tracked by Nomad.Common.Models.Admin.Asset.ChangeAssetPropertiesModel.AvailableStartDateSpecified -- Newtonsoft only\r\ninvokes the setter when the key is present in the payload. This replaces an earlier\r\nDateTime.MinValue sentinel, under which a caller sending the literal value\r\n\"0001-01-01T00:00:00\" was indistinguishable from omitting the key.",
             "format": "date-time",
             "nullable": true
           },
           "availableEndDate": {
             "type": "string",
-            "description": "Gets or sets the availability ending date of the asset for entitlement purposes\r\nMinValue is used to differentiate between null values and missing properties\r\nWe technically want null so we can clear the date.",
+            "description": "Gets or sets the availability ending date of the asset for entitlement purposes.\r\nSee Nomad.Common.Models.Admin.Asset.ChangeAssetPropertiesModel.AvailableStartDate for the omitted-versus-null semantics.",
             "format": "date-time",
             "nullable": true
+          },
+          "availableStartDateSpecified": {
+            "type": "boolean",
+            "description": "Gets a value indicating whether Nomad.Common.Models.Admin.Asset.ChangeAssetPropertiesModel.AvailableStartDate was present in the\r\nrequest payload at all, which is what distinguishes \"leave unchanged\" from \"clear\".",
+            "readOnly": true
+          },
+          "availableEndDateSpecified": {
+            "type": "boolean",
+            "description": "Gets a value indicating whether Nomad.Common.Models.Admin.Asset.ChangeAssetPropertiesModel.AvailableEndDate was present in the\r\nrequest payload at all, which is what distinguishes \"leave unchanged\" from \"clear\".",
+            "readOnly": true
           },
           "customProperties": {
             "type": "object",
@@ -21589,6 +22444,10 @@
             "type": "string",
             "description": "Gets or sets the URL of the master manifest used for clip generation.",
             "nullable": true
+          },
+          "useHlsSegmentBasedClipping": {
+            "type": "boolean",
+            "description": "Gets or sets a value indicating whether the caller requests HLS segment-based\r\nclipping (manifest rewrite + `MaterializeHlsBundle`) instead of a full\r\nMediaConvert transcode. The server-side\r\n`NomadApplicationSettings.UseHlsSegmentBasedClipping` flag must also be\r\nenabled; both must be `true` for the HLS path to be taken."
           }
         },
         "additionalProperties": false,
@@ -22024,6 +22883,28 @@
         },
         "additionalProperties": false
       },
+      "ContentDefinitionAnalysisSummary": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "recordsAnalyzed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "uniqueIdentifierFieldsObserved": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "ContentDefinitionGroupModel": {
         "type": "object",
         "properties": {
@@ -22304,10 +23185,16 @@
           "Auto"
         ],
         "type": "string",
+        "description": "Indicates how the language of a content record was determined.",
         "x-enumNames": [
           "Original",
           "Override",
           "Auto"
+        ],
+        "x-enumDescriptions": [
+          "Content is in the base/default language with no language override applied.",
+          "Content language has been explicitly overridden from the default.",
+          "Content language was determined automatically by the platform."
         ]
       },
       "ContentManagementTypes": {
@@ -22764,9 +23651,11 @@
           "LiveRecordingStopped",
           "ExportSearchResults",
           "AssetSharedExternal",
-          "AnonymousUpload"
+          "AnonymousUpload",
+          "ClipReady"
         ],
         "type": "string",
+        "description": "Identifies the email notification template to render and dispatch.",
         "x-enumNames": [
           "AssetRestored",
           "UserApproved",
@@ -22779,7 +23668,23 @@
           "LiveRecordingStopped",
           "ExportSearchResults",
           "AssetSharedExternal",
-          "AnonymousUpload"
+          "AnonymousUpload",
+          "ClipReady"
+        ],
+        "x-enumDescriptions": [
+          "Notification sent when an archived asset has been restored to active storage.",
+          "Notification sent when a user account has been approved.",
+          "Notification sent when a collection is shared with internal users.",
+          "Notification sent when a collection is shared with external recipients.",
+          "Invitation email sent to a new user to join the platform.",
+          "Notification sent when an asset is shared with internal users.",
+          "Notification sent when a bulk download ZIP file is ready.",
+          "Notification sent when a Media Builder job completes.",
+          "Notification sent when a live recording has stopped.",
+          "Notification sent when a search results export is ready for download.",
+          "Notification sent when an asset is shared with external recipients.",
+          "Notification sent when an anonymous upload is received.",
+          "Notification sent when a requested clip has been created and is ready."
         ]
       },
       "EmbeddingTypes": {
@@ -22799,6 +23704,14 @@
           "Video",
           "Audio",
           "SearchText"
+        ],
+        "x-enumDescriptions": [
+          "Embedding vector generated from the full media summary, combining text, image, and audio features.",
+          "Embedding vector generated from the text content of the asset.",
+          "Embedding vector generated from image frames or the primary image of the asset.",
+          "Embedding vector generated from video content including visual and temporal features.",
+          "Embedding vector generated from the audio track of the asset.",
+          "Embedding vector generated specifically for semantic text search queries."
         ]
       },
       "FaceMatchTypes": {
@@ -22831,14 +23744,17 @@
         "properties": {
           "id": {
             "type": "string",
+            "description": "Gets or sets the unique identifier of the face detection record.",
             "format": "uuid"
           },
           "confidence": {
             "type": "number",
+            "description": "Gets or sets the detection confidence score; for grouped faces this is the average across all bounding boxes.",
             "format": "double"
           },
           "externalFaceId": {
             "type": "string",
+            "description": "Gets or sets the identifier returned by the external AI service for this face.",
             "nullable": true
           },
           "boundingBoxes": {
@@ -22846,20 +23762,24 @@
             "items": {
               "$ref": "#/components/schemas/BoundingBoxModel"
             },
+            "description": "Gets or sets the bounding box regions where this face was detected in the image or video frame.",
             "nullable": true
           },
           "sourceId": {
             "type": "string",
+            "description": "Gets or sets the identifier of the source asset or frame from which the face was detected.",
             "format": "uuid",
             "nullable": true
           },
           "similarityScore": {
             "type": "integer",
+            "description": "Gets or sets the similarity score when matched against a known person; null if not matched.",
             "format": "int32",
             "nullable": true
           },
           "personId": {
             "type": "string",
+            "description": "Gets or sets the identifier of the matched person record; null if unidentified.",
             "format": "uuid",
             "nullable": true
           },
@@ -22868,24 +23788,29 @@
             "items": {
               "$ref": "#/components/schemas/SegmentModel"
             },
+            "description": "Gets or sets the video segments in which this face appears.",
             "nullable": true
           },
           "rotationCorrection": {
             "type": "integer",
+            "description": "Gets or sets the rotation correction angle applied to orient the face correctly.",
             "format": "int32",
             "nullable": true
           },
           "celebrityExternalId": {
             "type": "string",
+            "description": "Gets or sets the external identifier of the matched celebrity from the AI service.",
             "nullable": true
           },
           "celebrityConfidence": {
             "type": "number",
+            "description": "Gets or sets the confidence score for the celebrity match.",
             "format": "float",
             "nullable": true
           },
           "celebrityName": {
             "type": "string",
+            "description": "Gets or sets the name of the matched celebrity.",
             "nullable": true
           },
           "celebrityUrls": {
@@ -22893,14 +23818,17 @@
             "items": {
               "type": "string"
             },
+            "description": "Gets or sets reference URLs providing more information about the matched celebrity.",
             "nullable": true
           },
           "isPersonValidated": {
             "type": "boolean",
+            "description": "Gets or sets a value indicating whether the person match has been manually validated.",
             "nullable": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "A face detected in an image or video frame by AI analysis."
       },
       "FieldModel": {
         "type": "object",
@@ -23368,14 +24296,17 @@
             "items": {
               "$ref": "#/components/schemas/CollectionContentModel"
             },
+            "description": "Gets or sets the list items.",
             "nullable": true
           },
           "hasItems": {
             "type": "boolean",
+            "description": "Gets a value indicating whether the list contains at least one item.",
             "readOnly": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "A non-paginated list result."
       },
       "ListModelRelatedContentModel": {
         "type": "object",
@@ -23385,14 +24316,17 @@
             "items": {
               "$ref": "#/components/schemas/RelatedContentModel"
             },
+            "description": "Gets or sets the list items.",
             "nullable": true
           },
           "hasItems": {
             "type": "boolean",
+            "description": "Gets a value indicating whether the list contains at least one item.",
             "readOnly": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "A non-paginated list result."
       },
       "ListModelTagContentModel": {
         "type": "object",
@@ -23402,14 +24336,17 @@
             "items": {
               "$ref": "#/components/schemas/TagContentModel"
             },
+            "description": "Gets or sets the list items.",
             "nullable": true
           },
           "hasItems": {
             "type": "boolean",
+            "description": "Gets a value indicating whether the list contains at least one item.",
             "readOnly": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "A non-paginated list result."
       },
       "ListResultModelAdminUserModel": {
         "type": "object",
@@ -23902,6 +24839,48 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SearchResultModel"
+            },
+            "description": "Gets or sets a collection of related items that provide additional context for the main items.",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Gets or sets an optional message providing additional information about the result.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Represents a paginated list result containing a collection of items, total count, and optional related items."
+      },
+      "ListResultModelTransferItemModel": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransferItemModel"
+            },
+            "description": "Gets or sets the collection of items in the current page of results.",
+            "nullable": true
+          },
+          "totalItemCount": {
+            "type": "integer",
+            "description": "Gets or sets the total number of items available across all pages.",
+            "format": "int64"
+          },
+          "nextPageOffset": {
+            "description": "Gets or sets the offset token for retrieving the next page of results.",
+            "nullable": true
+          },
+          "hasItems": {
+            "type": "boolean",
+            "description": "Gets a value indicating whether the Items collection contains any items.",
+            "readOnly": true
+          },
+          "relatedItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransferItemModel"
             },
             "description": "Gets or sets a collection of related items that provide additional context for the main items.",
             "nullable": true
@@ -24490,7 +25469,7 @@
           "A channel backed by the EdgeCaster hardware encoder.",
           "A channel backed by AWS Interactive Video Service (IVS) for ultra-low-latency streaming.",
           "A channel that references an externally managed stream not provisioned through this platform.",
-          "A real-time, sub-second latency channel (e.g. Red5 Pro, Phenix).",
+          "A real-time, sub-second latency channel (e.g. Red5 Pro, IVS Realtime).",
           "A simplified channel type with a reduced feature set, suitable for straightforward streaming scenarios."
         ]
       },
@@ -25910,6 +26889,8 @@
           "EmbeddingTypes",
           "AssetTransferStatuses",
           "AvailabilityStatuses",
+          "IvsRealtimeRecordingModes",
+          "UserBehaviorEventTypes",
           "VideoTrackingStatuses",
           "VideoTrackingAlertStatuses",
           "FrameStateFlags",
@@ -26050,6 +27031,8 @@
           "EmbeddingTypes",
           "AssetTransferStatuses",
           "AvailabilityStatuses",
+          "IvsRealtimeRecordingModes",
+          "UserBehaviorEventTypes",
           "VideoTrackingStatuses",
           "VideoTrackingAlertStatuses",
           "FrameStateFlags",
@@ -26252,6 +27235,7 @@
               },
               "message": {
                 "type": "string",
+                "description": "Gets or sets the message text.",
                 "nullable": true
               },
               "fieldNames": {
@@ -26259,12 +27243,14 @@
                 "items": {
                   "type": "string"
                 },
+                "description": "Gets or sets the names of the fields this message relates to; empty for non-field-specific messages.",
                 "nullable": true
               }
             },
             "additionalProperties": false
           }
-        ]
+        ],
+        "description": "A structured message attached to an API response, such as a validation error or informational notice."
       },
       "MessageInfoTypes": {
         "enum": [
@@ -26394,6 +27380,7 @@
           "TwelveLabsVideoEmbedding",
           "TwelveLabsAudioEmbedding",
           "TwelveLabsImageEmbedding",
+          "ManifestHashScan",
           "CustomType"
         ],
         "type": "string",
@@ -26510,7 +27497,123 @@
           "TwelveLabsVideoEmbedding",
           "TwelveLabsAudioEmbedding",
           "TwelveLabsImageEmbedding",
+          "ManifestHashScan",
           "CustomType"
+        ],
+        "x-enumDescriptions": [
+          "Extracted text content from document assets such as PDF and Office files.",
+          "Key phrases identified by AWS Comprehend NLP analysis.",
+          "Named entities (people, places, organisations) identified by AWS Comprehend NLP analysis.",
+          "Face index data produced by AWS Rekognition image face indexing.",
+          "Face search results from AWS Rekognition image face matching against the index.",
+          "Visual object and scene labels detected by AWS Rekognition on images.",
+          "Celebrities identified by AWS Rekognition in image assets.",
+          "Visual object and scene labels detected by AWS Rekognition across video frames.",
+          "Structured document analysis results (forms, tables, key-value pairs) from AWS Textract.",
+          "Speech-to-text transcription output from AWS Transcribe.",
+          "WebVTT subtitle file produced by AWS Transcribe.",
+          "Translated transcription text produced by AWS Transcribe combined with AWS Translate.",
+          "Translated WebVTT subtitle file produced by AWS Transcribe combined with AWS Translate.",
+          "Celebrities identified by AWS Rekognition across video frames.",
+          "Person bounding-box tracking data from AWS Rekognition video analysis.",
+          "Face detection and attribute data from AWS Rekognition video analysis.",
+          "Basic image properties such as dimensions, colour space, and format.",
+          "Transcoded video or audio rendition produced by a transcode job.",
+          "Video or audio clip segment extracted from the parent asset.",
+          "Technical media properties (codecs, bitrates, frame rate, duration) from MediaInfo analysis.",
+          "Text detected within images by AWS Rekognition OCR.",
+          "Unsafe or explicit content moderation labels from AWS Rekognition applied to images.",
+          "Unsafe or explicit content moderation labels from AWS Rekognition applied to video.",
+          "Still image captured from a specific point in a video asset.",
+          "Contact-sheet sprite image showing a grid of thumbnail frames from a video.",
+          "Primary thumbnail image representing the asset.",
+          "Custom-trained model labels detected by AWS Rekognition Custom Labels on images.",
+          "Resized or watermarked preview version of an image asset.",
+          "Text detected within video frames by AWS Rekognition OCR.",
+          "Shot and segment boundary data detected by AWS Rekognition on video.",
+          "Shot and segment boundary data detected by the Nomad internal video analysis engine.",
+          "Medical-domain speech-to-text transcription from AWS Transcribe Medical.",
+          "Compressed audio preview rendition of the asset.",
+          "Plain-text representation or extract of the asset content.",
+          "Manifest file describing the asset's constituent parts or renditions.",
+          "Time-based interval segment definitions for the asset.",
+          "Plain-text output from AWS Transcribe Medical.",
+          "Translated medical transcription text from AWS Transcribe Medical combined with AWS Translate.",
+          "XMP metadata embedded in or sidecar to an Adobe-compatible asset.",
+          "Plain-text extraction of XMP metadata values from an Adobe-compatible asset.",
+          "EXIF technical metadata extracted from image files.",
+          "Text detected in images by AWS Textract OCR.",
+          "Advertisement break segment markers within video content.",
+          "VMAP ad schedule XML document for server-side ad insertion.",
+          "VAST ad tag XML document for video ad serving.",
+          "Video rendition produced for or processed by AWS MediaTailor ad insertion.",
+          "SRT subtitle file produced by transcription.",
+          "Raw unformatted transcription JSON output from AWS Transcribe.",
+          "Subtitle or caption track associated with the asset.",
+          "Record of processor jobs executed against this asset.",
+          "Office document rendition (DOCX, XLSX, PPTX) associated with the asset.",
+          "Container record grouping all transcription-related metadata for the asset.",
+          "Sentiment analysis results (positive, negative, neutral, mixed) from AWS Comprehend.",
+          "Dominant language detection results from AWS Comprehend.",
+          "Reference to the original source video file prior to any processing.",
+          "Manifest tracking the state and progress of an asset import operation.",
+          "SCC caption file produced by transcription.",
+          "TTML subtitle file produced by transcription.",
+          "DFXP caption file produced by transcription.",
+          "SMPTETT caption file produced by transcription.",
+          "XML caption file produced by transcription.",
+          "QuickTime caption file produced by transcription.",
+          "RealText caption file produced by transcription.",
+          "SSA subtitle file produced by transcription.",
+          "ASS subtitle file produced by transcription.",
+          "SBV subtitle file produced by transcription (YouTube caption format).",
+          "SMI caption file produced by transcription.",
+          "SAMI caption file produced by transcription.",
+          "STL subtitle file produced by transcription.",
+          "SUB subtitle file produced by transcription.",
+          "Placeholder for an associated asset relationship; not yet implemented.",
+          "WebVTT file mapping timestamps to contact-sheet frame positions for video scrubbing.",
+          "Timecode index for frames within a contact-sheet image.",
+          "Sprite image used as the contact sheet for video frame scrubbing.",
+          "Rendered output image produced from a template or compositing operation.",
+          "Roku BIF (Base Index Frames) trick-play file for thumbnail scrubbing on Roku devices.",
+          "Image analysis results (objects, tags, captions, colours) from Azure Computer Vision.",
+          "Image embedding vector produced by Azure Computer Vision for semantic image search.",
+          "Text embedding vector produced by Azure AI for semantic text search.",
+          "Combined content embedding vectors used for cross-modal semantic search.",
+          "Sports analytics and event data produced by SportLogiq video analysis.",
+          "Animated GIF rendition generated from a video asset.",
+          "Nomad Media task execution records associated with the asset.",
+          "Metadata imported from Google Photos for the asset.",
+          "Video understanding and analysis results from TwelveLabs AI.",
+          "Image analysis results from Amazon Bedrock foundation models.",
+          "Text embedding vector produced by Amazon Bedrock for semantic text search.",
+          "Image embedding vector produced by Amazon Bedrock for semantic image search.",
+          "AI-generated text summary of the asset content produced by Amazon Bedrock.",
+          "AI-generated image associated with the asset.",
+          "Transcoded rendition produced from an AWS IVS live recording.",
+          "AI-generated summary of the asset's transcript or spoken content.",
+          "Cached search index data for the asset, used to accelerate search queries.",
+          "Speech-to-text transcription produced by OpenAI Whisper.",
+          "Scene detection and chapter segmentation data from Bitmovin video analysis.",
+          "Structured data extraction results from Amazon Bedrock Data Automation.",
+          "Scene detection results from Amazon Bedrock video analysis.",
+          "LLM-generated segment content and annotations from MobiusLabs analysis.",
+          "Audio waveform data for visual playback display in the player UI.",
+          "Asset detail JSON imported from the Canto DAM system.",
+          "ID3 tag metadata embedded in audio files.",
+          "AI recognition and analysis results from Wasabi AiR.",
+          "Text embedding vector produced by Amazon Nova for semantic text search.",
+          "Image embedding vector produced by Amazon Nova for semantic image search.",
+          "Audio embedding vector produced by Amazon Nova for semantic audio search.",
+          "Video embedding vector produced by Amazon Nova for semantic video search.",
+          "Document embedding vector produced by Amazon Nova for semantic document search.",
+          "Video analysis results from TwelveLabs processed via Amazon Bedrock.",
+          "Video embedding vector produced by TwelveLabs for semantic video search.",
+          "Audio embedding vector produced by TwelveLabs for semantic audio search.",
+          "Image embedding vector produced by TwelveLabs for semantic image search.",
+          "Perceptual hash scan data for every TS chunk in a video manifest, produced during auto-clip boundary detection.",
+          "User-defined custom metadata type for tenant-specific extensions."
         ]
       },
       "NomadCommonModelsAdminAssetLabelModel": {
@@ -26770,6 +27873,28 @@
         },
         "additionalProperties": false,
         "description": "Represents a single S3 version entry in the object version history panel."
+      },
+      "ParticipantTokenResponse": {
+        "type": "object",
+        "properties": {
+          "participantToken": {
+            "type": "string",
+            "description": "Gets or sets the IVS-issued participant token, passed directly to the SDK Stage constructor.",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Gets or sets the token expiry time (ISO 8601). Maximum 1 hour per AWS constraint.",
+            "format": "date-time"
+          },
+          "stageArn": {
+            "type": "string",
+            "description": "Gets or sets the IVS stage ARN for the channel, echoed back so the client does not need to re-fetch.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response model for the IVS participant token endpoint."
       },
       "PersonFaceModel": {
         "type": "object",
@@ -28032,6 +29157,78 @@
           "Matches records where the field value begins with the supplied prefix string."
         ]
       },
+      "SearchMappingConflict": {
+        "type": "object",
+        "properties": {
+          "fieldName": {
+            "type": "string",
+            "nullable": true
+          },
+          "isCrossContentDefinition": {
+            "type": "boolean",
+            "description": "True when the conflicting observations come from more than one content definition.\r\nFalse when the conflict is within records of a single content definition (data quality issue)."
+          },
+          "observations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchMappingObservation"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SearchMappingConflictReport": {
+        "type": "object",
+        "properties": {
+          "totalRecordsAnalyzed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "contentDefinitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentDefinitionAnalysisSummary"
+            },
+            "nullable": true
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchMappingConflict"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SearchMappingObservation": {
+        "type": "object",
+        "properties": {
+          "contentDefinitionSchema": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentDefinitionTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "recordId": {
+            "type": "string",
+            "nullable": true
+          },
+          "mappingType": {
+            "type": "string",
+            "description": "The normalized OpenSearch-equivalent type (text, long, double, boolean, date, keyword, object).",
+            "nullable": true
+          },
+          "sampleValue": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SearchModel": {
         "type": "object",
         "properties": {
@@ -28438,6 +29635,21 @@
           "AI_Labels",
           "AI_Text",
           "AI_Captions"
+        ],
+        "x-enumDescriptions": [
+          "Searches across all asset detail fields including title, description, and keywords.",
+          "Searches the asset title field for an exact or close match.",
+          "Searches text extracted from the body of document assets.",
+          "Searches subtitle and transcript text associated with media assets.",
+          "Searches values stored in user-defined custom metadata fields.",
+          "Searches metadata embedded in image files via the EXIF standard.",
+          "Searches user-applied tags on assets.",
+          "Searches the names and descriptions of collections containing the asset.",
+          "Searches titles and descriptions of content related to the asset.",
+          "Searches time-coded annotation text attached to media assets.",
+          "Searches AI-generated visual label classifications on images and video frames.",
+          "Searches AI-detected text found within images or video frames.",
+          "Searches AI-generated natural-language captions describing media content."
         ]
       },
       "SecureOutputFieldStates": {
@@ -28501,6 +29713,13 @@
           "FolderWrite",
           "Administrator",
           "Guest"
+        ],
+        "x-enumDescriptions": [
+          "Read-only access; the user can view assets but cannot modify or delete them.",
+          "Read and write access; the user can view and upload or update assets.",
+          "Read, write, and delete access; the user can view, upload, update, and delete assets.",
+          "Full administrative access including content management and security configuration.",
+          "Guest access with limited read permissions; intended for unauthenticated or anonymous users."
         ]
       },
       "SegmentModel": {
@@ -29273,6 +30492,224 @@
         },
         "additionalProperties": false
       },
+      "TransferDirections": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "description": "Which way an asset transfer moves relative to the platform.",
+        "format": "int32",
+        "x-enumNames": [
+          "All",
+          "Upload",
+          "Download"
+        ],
+        "x-enumDescriptions": [
+          "Both directions. Only valid as a query filter, never stored on a record.",
+          "Content moving from the client into the platform.",
+          "Content moving from the platform out to the client."
+        ]
+      },
+      "TransferItemModel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Gets or sets the transfer id, which is what cancel and progress calls address.",
+            "format": "uuid"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/TransferDirections"
+          },
+          "transferStatus": {
+            "$ref": "#/components/schemas/AssetTransferStatuses"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Gets or sets a human readable label, normally the file name.",
+            "nullable": true
+          },
+          "completePercentage": {
+            "type": "number",
+            "description": "Gets or sets percent complete, 0 to 100, when known.",
+            "format": "float",
+            "nullable": true
+          },
+          "bytesTransferred": {
+            "type": "integer",
+            "description": "Gets or sets bytes moved so far.",
+            "format": "int64"
+          },
+          "bytesTotal": {
+            "type": "integer",
+            "description": "Gets or sets the total size of the transfer, or zero when it is not known up front.",
+            "format": "int64"
+          },
+          "attemptCount": {
+            "type": "integer",
+            "description": "Gets or sets how many times this transfer has been attempted.",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "Gets or sets the failure reason. Only populated for a failed transfer.",
+            "nullable": true
+          },
+          "createdDate": {
+            "type": "string",
+            "description": "Gets or sets when the record was created.",
+            "format": "date-time"
+          },
+          "queueDate": {
+            "type": "string",
+            "description": "Gets or sets when the transfer was queued.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "startTransferDate": {
+            "type": "string",
+            "description": "Gets or sets when bytes first started moving.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completeTransferDate": {
+            "type": "string",
+            "description": "Gets or sets when the transfer finished successfully.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "cancelledDate": {
+            "type": "string",
+            "description": "Gets or sets when the transfer was cancelled.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "errorDate": {
+            "type": "string",
+            "description": "Gets or sets when the transfer failed.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastProgressDate": {
+            "type": "string",
+            "description": "Gets or sets when progress was last recorded.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "assetId": {
+            "type": "string",
+            "description": "Gets or sets the asset this transfer concerns, in either direction.",
+            "format": "uuid",
+            "nullable": true
+          },
+          "downloadProxy": {
+            "type": "boolean",
+            "description": "Gets or sets whether a download is taking the proxy rendition rather than the original.\r\nDownload only.",
+            "nullable": true
+          },
+          "relatedAssetId": {
+            "type": "string",
+            "description": "Gets or sets the asset this upload is a related file of. Upload only.",
+            "format": "uuid",
+            "nullable": true
+          },
+          "displayObjectKey": {
+            "type": "string",
+            "description": "Gets or sets the destination object key as it should be shown to a user. Upload only.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "One transfer as presented to a client, in either direction."
+      },
+      "TransferSummaryModel": {
+        "type": "object",
+        "properties": {
+          "uploadCounts": {
+            "type": "object",
+            "properties": {
+              "Queued": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Downloading": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Uploading": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Error": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Complete": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Cancelled": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Gets or sets the per-status counts for uploads.",
+            "nullable": true
+          },
+          "downloadCounts": {
+            "type": "object",
+            "properties": {
+              "Queued": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Downloading": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Uploading": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Error": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Complete": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Cancelled": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Gets or sets the per-status counts for downloads.",
+            "nullable": true
+          },
+          "activeCount": {
+            "type": "integer",
+            "description": "Gets or sets the number of transfers that have not reached a terminal state.",
+            "format": "int32"
+          },
+          "errorCount": {
+            "type": "integer",
+            "description": "Gets or sets the number of transfers that ended in failure.",
+            "format": "int32"
+          },
+          "changeToken": {
+            "type": "string",
+            "description": "Gets or sets a token that changes whenever any counted value changes.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Counts of a user's transfers grouped by state."
+      },
       "UndeleteRequestModel": {
         "type": "object",
         "properties": {
@@ -29299,32 +30736,6 @@
         "additionalProperties": false,
         "description": "Request payload for the undelete endpoint.\r\nSupports two modes:\r\n<list type=\"bullet\"><item><description><b>Single-file undelete</b> — set Nomad.Common.Models.Admin.Asset.UndeleteRequestModel.IsFolder to `false` and supply\r\n    both Nomad.Common.Models.Admin.Asset.UndeleteRequestModel.ObjectKey and Nomad.Common.Models.Admin.Asset.UndeleteRequestModel.VersionId (the delete-marker version ID\r\n    returned by the list endpoint). Only that specific delete marker is removed.\r\n  </description></item><item><description><b>Folder undelete</b> — set Nomad.Common.Models.Admin.Asset.UndeleteRequestModel.IsFolder to `true` and supply\r\n    Nomad.Common.Models.Admin.Asset.UndeleteRequestModel.ObjectKey as the folder prefix (e.g. \"Content/Videos/\"). Every delete\r\n    marker whose key begins with that prefix is removed.\r\n  </description></item></list>"
       },
-      "UpdateDownloadQueueModel": {
-        "type": "object",
-        "properties": {
-          "assetDownloadQueueId": {
-            "type": "string",
-            "description": "Gets or sets the unique identifier of the download queue item to update.",
-            "format": "uuid"
-          },
-          "transferStatus": {
-            "$ref": "#/components/schemas/AssetTransferStatuses"
-          },
-          "errorMessage": {
-            "type": "string",
-            "description": "Gets or sets the error message if the download has failed.",
-            "nullable": true
-          },
-          "completePercentage": {
-            "type": "number",
-            "description": "Gets or sets the completion percentage of the download, expressed as a value between 0 and 100.",
-            "format": "float",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "Represents a request to update the status and progress of an item in the download queue."
-      },
       "UpdateTranscriptModel": {
         "type": "object",
         "properties": {
@@ -29341,6 +30752,33 @@
         },
         "additionalProperties": false,
         "description": "Represents a request to update the text content of a transcription entry at a specific timecode."
+      },
+      "UpdateTransferModel": {
+        "type": "object",
+        "properties": {
+          "transferStatus": {
+            "$ref": "#/components/schemas/AssetTransferStatuses"
+          },
+          "completePercentage": {
+            "type": "number",
+            "description": "Gets or sets percent complete, 0 to 100. Only read for an in-progress status.",
+            "format": "float",
+            "nullable": true
+          },
+          "bytesTransferred": {
+            "type": "integer",
+            "description": "Gets or sets bytes moved so far, when the client tracks it.",
+            "format": "int64",
+            "nullable": true
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "Gets or sets the failure reason. Only read alongside Nomad.Common.Enums.AssetTransferStatuses.Error.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A client-reported status or progress change for one transfer."
       },
       "UploadOverwriteOptions": {
         "enum": [
@@ -29382,6 +30820,15 @@
           "RecreatePreview",
           "RecreateSubtitles",
           "RecreateTranscodes"
+        ],
+        "x-enumDescriptions": [
+          "Replaces the existing display name with the name derived from the incoming file.",
+          "Replaces the existing display date with the date derived from the incoming file.",
+          "Replaces the existing language setting with the language derived from the incoming file.",
+          "Regenerates the thumbnail image from the new file content.",
+          "Regenerates the preview image from the new file content.",
+          "Re-runs subtitle and transcription generation against the new file.",
+          "Re-runs all transcoding jobs against the new file content."
         ]
       },
       "UserContentAttributeSummaryModel": {
@@ -30103,7 +31550,8 @@
       "name": "Asset"
     },
     {
-      "name": "AssetQueue"
+      "name": "AssetQueue",
+      "description": "The transfer queue API: everything a client needs to run and watch uploads and downloads."
     },
     {
       "name": "AssetUpload"
