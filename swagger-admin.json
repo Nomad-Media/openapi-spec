@@ -10,11 +10,11 @@
     "license": {
       "name": "MIT"
     },
-    "version": "2026.9.0"
+    "version": "2026.9.1"
   },
   "servers": [
     {
-      "url": "https://localhost:44395/api"
+      "url": "https://localhost/api"
     }
   ],
   "paths": {
@@ -1058,8 +1058,8 @@
         "tags": [
           "AdminAsset"
         ],
-        "summary": "Legacy endpoint. Retrieves child folder nodes for a given parent folder in the asset tree.",
-        "description": "\r\n<b>Deprecated:</b> This endpoint is superseded. Use the search API for folder browsing instead.\r\n\r\n<b>Behavior:</b> Returns a paginated, sortable list of child folders under the specified parent.\r\n            If the parent is the root (empty GUID), all top-level storage bucket folders are returned.\r\n            Results include folder metadata such as media type, content length, and modification date.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
+        "summary": "Retrieves child folder nodes for a given parent folder in the asset tree.",
+        "description": "\r\n<b>Behavior:</b> Returns a paginated, sortable list of child folders under the specified parent.\r\n            If the parent is the root (empty GUID), all top-level storage bucket folders are returned.\r\n            Results include folder metadata such as media type, content length, and modification date.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
         "parameters": [
           {
             "name": "folderId",
@@ -2389,12 +2389,12 @@
           "AdminAsset"
         ],
         "summary": "Retrieves the list of uploads for the current user.",
-        "description": "\r\n<b>Prefer `GET /api/asset-queue/transfers?direction=Upload`.</b> That endpoint pages\r\n            properly, filters by status, reports progress and covers downloads with the same shape. This\r\n            one returns a single capped page and exists for existing clients.\r\n\r\n<b>Behavior:</b> Returns the current user's uploads, most recent first. By default only\r\n            unfinished uploads are returned. Set includeCompletedUploads to true to\r\n            include finished ones, which are now retained as history rather than deleted on completion.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token. No longer requires an administrator:\r\n            listing your own uploads is not an administrative act, and requiring it was the reason\r\n            ordinary users could not see their own upload queue.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
+        "description": "\r\n<b>Behavior:</b> Returns all uploads initiated by the current user. By default, only\r\n            in-progress uploads are returned. Set includeCompletedUploads to true\r\n            to also include completed uploads.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
         "parameters": [
           {
             "name": "includeCompletedUploads",
             "in": "query",
-            "description": "If true, includes finished uploads in the results.",
+            "description": "If true, includes completed uploads in the results. If false, only in-progress uploads are returned.",
             "schema": {
               "type": "boolean"
             }
@@ -2438,7 +2438,7 @@
           "AdminAsset"
         ],
         "summary": "Retrieves the individual upload parts for a multipart upload.",
-        "description": "\r\n<b>Behavior:</b> Returns all parts associated with the specified upload, including both\r\n            completed and pending parts. Each part includes its upload URL, part number, and completion status.\r\n            Use this to track the progress of a multipart upload or to resume a partially completed upload.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token, and the upload must belong to the\r\n            caller. This response contains freshly signed write URLs for every part, so an upload owned by\r\n            another user reports as not found rather than being returned.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated, or 404 if no\r\n            such upload belongs to the caller.",
+        "description": "\r\n<b>Behavior:</b> Returns all parts associated with the specified upload, including both\r\n            completed and pending parts. Each part includes its upload URL, part number, and completion status.\r\n            Use this to track the progress of a multipart upload or to resume a partially completed upload.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
         "parameters": [
           {
             "name": "id",
@@ -2467,16 +2467,6 @@
           },
           "401": {
             "description": "Caller is not authenticated.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "No such upload belongs to the caller.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3612,8 +3602,8 @@
         "tags": [
           "AdminAsset"
         ],
-        "summary": "Legacy endpoint for retrieving full asset detail. Prefer the non-admin asset detail endpoint.",
-        "description": "\r\n<b>Legacy:</b> Prefer the non-admin asset detail endpoint for new integrations.\r\n\r\n<b>Behavior:</b> Returns comprehensive asset details including media properties (dimensions,\r\n            duration, codec), URLs for streaming and preview, related assets (proxies, thumbnails, subtitles),\r\n            AI-generated metadata, and processing status.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.\r\n            Returns 404 if the asset is not found.",
+        "summary": "Retrieves the full detail model for an asset, including all media properties and related assets.",
+        "description": "\r\n<b>Behavior:</b> Returns comprehensive asset details including media properties (dimensions,\r\n            duration, codec), URLs for streaming and preview, related assets (proxies, thumbnails, subtitles),\r\n            AI-generated metadata, and processing status.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> None.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.\r\n            Returns 404 if the asset is not found.",
         "parameters": [
           {
             "name": "id",
@@ -6293,7 +6283,7 @@
           "AssetQueue"
         ],
         "summary": "Lists the caller's transfers, newest first.",
-        "description": "\r\n<b>Behavior:</b> Returns one page of the caller's own transfers. By default both\r\n            directions are included and the two tables are merged in date order.\r\n\r\n<b>Paging:</b> Pass the `nextPageOffset` from a response back as `cursor` to\r\n            continue. Cursors are positions rather than offsets, so paging stays correct while new\r\n            transfers are being created. A null `nextPageOffset` means the end has been reached.\r\n\r\n<b>Totals:</b>\r\n  `totalItemCount` is always -1. A real total would mean counting the\r\n            caller's whole history on every page, and a client only needs to know whether more exist.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token. Only the caller's own transfers\r\n            are ever returned.",
+        "description": "\r\n<b>Behavior:</b> Returns one page of the caller's own transfers. By default both\r\n            directions are included and the two tables are merged in date order.\r\n\r\n<b>Paging:</b> Pass the `nextPageOffset` from a response back as `cursor` to\r\n            continue. Cursors are positions rather than offsets, so paging stays correct while new\r\n            transfers are being created. A null `nextPageOffset` means the end has been reached.\r\n\r\n<b>Totals:</b>\r\n  `totalItemCount` is the number of the caller's transfers matching the\r\n            direction and status filters, computed by a cardinality aggregation, so it is approximate for\r\n            very large histories. Clients use it to size a paginator.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token. Only the caller's own transfers\r\n            are ever returned.",
         "parameters": [
           {
             "name": "direction",
@@ -6335,10 +6325,26 @@
           {
             "name": "oldestFirst",
             "in": "query",
-            "description": "Return oldest first instead of newest first.",
+            "description": "Return oldest first instead of newest first. Ignored when sortBy is set.",
             "schema": {
               "type": "boolean",
               "default": false
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Optional field to sort by, e.g. `queueDate`, `transferStatus` or `assetTitle`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortDescending",
+            "in": "query",
+            "description": "Sort sortBy descending. Defaults to ascending.",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -6349,6 +6355,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ListResultModelTransferItemModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "AssetQueue"
+        ],
+        "summary": "Removes all of the caller's transfer history.",
+        "description": "\r\n<b>Behavior:</b> The server pages through every transfer owned by the calling user and\r\n            deletes them all. No transfer ids need to be supplied — this is a bulk clear.\r\n\r\n<b>Note:</b> This removes the bookkeeping only. It does not cancel work in flight —\r\n            cancel active transfers first if that is the intent.",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Which side to clear. Defaults to both.",
+            "schema": {
+              "$ref": "#/components/schemas/TransferDirections"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The number removed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
                 }
               }
             }
@@ -6459,10 +6510,109 @@
         },
         "responses": {
           "200": {
-            "description": "The assets were queued or handed to a background worker."
+            "description": "The created or revived transfers (empty array when handed off asynchronously).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransferItemModel"
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "No asset ids were provided.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/asset-queue/uploads": {
+      "post": {
+        "tags": [
+          "AssetQueue"
+        ],
+        "summary": "Adds files to the caller's upload queue.",
+        "description": "\r\n<b>Behavior:</b> Starts a client upload for each file. Small batches are started inline\r\n            and returned; large batches are handed to a background worker and this returns immediately.\r\n\r\n<b>Presigned URLs:</b> Fetch each file's presigned part URLs from\r\n            `GET /asset-queue/uploads/{id}` once the transfer id is known, rather than embedding them\r\n            here, so registration stays fast for very large batches.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.",
+        "requestBody": {
+          "description": "The files to queue.",
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUploadQueueModel"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUploadQueueModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUploadQueueModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUploadQueueModel"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUploadQueueModel"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUploadQueueModel"
+              }
+            },
+            "application/*+xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUploadQueueModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The started transfers (empty array when handed off asynchronously).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransferItemModel"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No upload items were provided.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7104,7 +7254,7 @@
           "AssetUpload"
         ],
         "summary": "Completes a multipart upload after all parts have been transferred.",
-        "description": "\r\n<b>Behavior:</b> Finalizes the multipart upload by combining all uploaded parts into the\r\n            final asset file. This triggers post-upload processing including media analysis, transcoding,\r\n            AI detection, and search indexing. Call this only after all parts have been uploaded and\r\n            confirmed via the complete-part endpoint.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> The uploaded parts are assembled into the final file. Asynchronous\r\n            processing jobs (transcoding, AI analysis, indexing) are triggered.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
+        "description": "\r\n<b>Behavior:</b> Finalizes the multipart upload by combining all uploaded parts into the\r\n            final asset file. This triggers post-upload processing including media analysis, transcoding,\r\n            AI detection, and search indexing.\r\n\r\nCalling the complete-part endpoint for every part first is optional. If it was skipped\r\n            for some or all parts, input must supply the part number and etag for\r\n            every part instead - the completion cannot otherwise know which parts belong in the file.\r\n            If every part was already confirmed via the complete-part endpoint, omit input\r\n            (or its `Parts` list) entirely and completion uses those confirmations.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> The uploaded parts are assembled into the final file. Asynchronous\r\n            processing jobs (transcoding, AI analysis, indexing) are triggered.\r\n\r\n<b>Error Scenarios:</b> Returns 400 if a supplied part list is empty, has a duplicate or\r\n            missing part number, or is missing an etag for any part. Returns 401 if the caller is not\r\n            authenticated.",
         "parameters": [
           {
             "name": "id",
@@ -7117,6 +7267,46 @@
             }
           }
         ],
+        "requestBody": {
+          "description": "Optional. When the client did not confirm every part via the complete-part endpoint, this must\r\nsupply the part number and etag for every part instead.",
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUploadCompleteRequestModel"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUploadCompleteRequestModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUploadCompleteRequestModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUploadCompleteRequestModel"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUploadCompleteRequestModel"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUploadCompleteRequestModel"
+              }
+            },
+            "application/*+xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUploadCompleteRequestModel"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "The upload was completed and processing was initiated.",
@@ -7124,6 +7314,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BatchResultModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A supplied part list is empty or incomplete.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -7557,13 +7757,10 @@
         "tags": [
           "Canto"
         ],
-        "summary": "Initiates a Canto asset import, either as a background batch job or synchronously.",
-        "description": "\r\n<b>Behavior:</b> When background is true (default), queues a\r\n            Nomad.Common.Enums.BatchActions.CantoImport batch action that the LargeAction Lambda will process\r\n            asynchronously. When false, runs the archive import synchronously for the requested page.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token (class-level [Authorize]).\r\n\r\n<b>Side Effects:</b> Background mode sends a message to the batch action queue.\r\n            Foreground mode archives the specified page of Canto assets directly.\r\n\r\n<b>Error Scenarios:</b> Returns 401 if the caller is not authenticated.",
         "parameters": [
           {
             "name": "background",
             "in": "query",
-            "description": "When true, the import is queued as a background batch job. When false, it runs synchronously. Defaults to true.",
             "schema": {
               "type": "boolean",
               "default": true
@@ -7572,7 +7769,6 @@
           {
             "name": "startingPageNumber",
             "in": "query",
-            "description": "The zero-based page number to begin importing from. Defaults to 0.",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -7582,7 +7778,6 @@
           {
             "name": "pageSize",
             "in": "query",
-            "description": "The number of assets to process per page. Defaults to 20.",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -7592,10 +7787,10 @@
         ],
         "responses": {
           "200": {
-            "description": "The import was successfully queued (background) or completed (foreground)."
+            "description": "OK"
           },
           "401": {
-            "description": "The caller is not authenticated."
+            "description": "Unauthorized. The caller must provide a valid Bearer token."
           }
         },
         "security": [
@@ -7610,13 +7805,10 @@
         "tags": [
           "Canto"
         ],
-        "summary": "Initiates a Canto asset import for a specific list of Canto IDs, either as a background batch job or synchronously.",
-        "description": "\r\n<b>Behavior:</b> When background is true (default), queues a\r\n            Nomad.Common.Enums.BatchActions.CantoImport batch action for the specified Canto IDs. When false,\r\n            archives the specified assets directly. If the list is null or empty, returns 204 No Content.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token (class-level [Authorize]).\r\n\r\n<b>Side Effects:</b> Background mode sends a message to the batch action queue.\r\n            Foreground mode archives the specified Canto assets directly.\r\n\r\n<b>Error Scenarios:</b> Returns 204 if cantoIds is null or empty.\r\n            Returns 401 if the caller is not authenticated.",
         "parameters": [
           {
             "name": "background",
             "in": "query",
-            "description": "When true, the import is queued as a background batch job. When false, it runs synchronously. Defaults to true.",
             "schema": {
               "type": "boolean",
               "default": true
@@ -7624,7 +7816,6 @@
           }
         ],
         "requestBody": {
-          "description": "A list of Canto asset identifiers to import.",
           "content": {
             "application/json-patch+json": {
               "schema": {
@@ -7686,13 +7877,10 @@
         },
         "responses": {
           "200": {
-            "description": "The import was successfully queued (background) or completed (foreground)."
-          },
-          "204": {
-            "description": "The provided Canto ID list was null or empty — no action taken."
+            "description": "OK"
           },
           "401": {
-            "description": "The caller is not authenticated."
+            "description": "Unauthorized. The caller must provide a valid Bearer token."
           }
         },
         "security": [
@@ -11619,7 +11807,7 @@
           "LiveChannel"
         ],
         "summary": "Assembles a VOD HLS recording from Red5 partition-based HLS artifacts stored in S3.",
-        "description": "\r\n<b>Behavior:</b> Scans the live channel's Red5 HLS upload location for partition folders\r\n            that overlap the specified time window, aggregates the relevant video and subtitle segments,\r\n            generates an assembled VOD HLS master manifest and variant playlists in S3, pre-registers\r\n            a placeholder Nomad asset, and enqueues a batch action to materialize the recording. The live\r\n            channel state is never modified by this operation.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> Writes assembled manifest files to the channel's HLS S3 bucket and\r\n            registers a placeholder asset. Does not modify the live channel entity.\r\n\r\n<b>Error Scenarios:</b> Returns 400 if the channel is not a Red5 HLS channel or\r\n            no segments are found for the specified time range.",
+        "description": "\r\n<b>Behavior:</b> Scans the live channel's Red5 HLS upload location for partition folders\r\n            that overlap the specified time window, aggregates the relevant video and subtitle segments,\r\n            generates an assembled VOD HLS master manifest and variant playlists in S3, pre-registers\r\n            a placeholder Nomad asset, and enqueues a batch action to materialize the recording. The live\r\n            channel state is never modified by this operation.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token.\r\n\r\n<b>Side Effects:</b> Writes assembled manifest files to the channel's HLS S3 bucket and\r\n            registers a placeholder asset. Does not modify the live channel entity.\r\n\r\n<b>Error Scenarios:</b> Returns 400 if the channel is not a Red5 HLS channel or\r\n            no segments are found for the specified time range.\r\n\r\n<b>Background mode:</b> When runInBackground is `true` the\r\n            operation is dispatched to a background thread and the endpoint returns 202 Accepted\r\n            immediately, avoiding gateway timeouts for large time windows. Results are written to\r\n            the audit log; no response body is returned in this mode.",
         "parameters": [
           {
             "name": "channelId",
@@ -11629,6 +11817,15 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "runInBackground",
+            "in": "query",
+            "description": "When true, process asynchronously and return 202 immediately.",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -11682,6 +11879,9 @@
                 }
               }
             }
+          },
+          "202": {
+            "description": "The recording job was accepted and is running in the background."
           },
           "400": {
             "description": "The channel is not a Red5 HLS channel or no segments were found.",
@@ -11763,97 +11963,6 @@
                 }
               }
             }
-          }
-        },
-        "security": [
-          {
-            "Bearer": [ ]
-          }
-        ]
-      }
-    },
-    "/liveChannel/{channelId}/participantToken": {
-      "get": {
-        "tags": [
-          "LiveChannel"
-        ],
-        "summary": "Generates a short-lived IVS participant token for viewing a real-time live channel.",
-        "description": "\r\n<b>Behavior:</b> Authenticates the caller via the Nomad JWT and returns a participant\r\n            token that the client passes to the amazon-ivs-web-broadcast SDK Stage constructor.\r\n            Tokens are valid for up to 60 minutes (the AWS-imposed ceiling) and are single-use per SDK join attempt.\r\n            The frontend should re-request a token and reconnect when the SDK fires a disconnect event\r\n            with reason TOKEN_EXPIRED.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token. The caller must have at least\r\n            Read permission on the channel's security groups.\r\n\r\n<b>Error Scenarios:</b>\r\n            Returns 400 if the channel is not a Realtime type.\r\n            Returns 403 if the caller lacks Read permission on the channel.\r\n            Returns 404 if the channel is not found.\r\n            Returns 409 if the channel is not in a Running state.\r\n            Returns 502 if the AWS CreateParticipantToken call fails.",
-        "parameters": [
-          {
-            "name": "channelId",
-            "in": "path",
-            "description": "The unique identifier of the live channel.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The participant token was generated successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ParticipantTokenResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The channel is not a Realtime type.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Caller is not authenticated.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Caller does not have Read access to this channel.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The channel was not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "The channel is not in a Running state.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "502": {
-            "description": "The AWS CreateParticipantToken call failed."
           }
         },
         "security": [
@@ -17107,64 +17216,6 @@
         ]
       }
     },
-    "/admin/search/analyze-mapping-conflicts": {
-      "get": {
-        "tags": [
-          "Search"
-        ],
-        "summary": "Scans all DynamoDB content definitions and identifies identifier field mapping conflicts.",
-        "description": "\r\n<b>Behavior:</b> Dry-runs the same identifier-building logic used during indexing across a sample\r\n            of records from every searchable DynamoDB content definition. When the same identifier field name\r\n            produces different OpenSearch mapping types across content definitions (e.g. one stores \"permission\"\r\n            as a LookupModel object while another stores it as plain text), a conflict is reported with both\r\n            content definition names, a sample record ID, and a sample value from each side of the conflict.\r\n\r\n<b>Use case:</b> Run this before re-initializing the OpenSearch index to identify which content\r\n            definitions have mis-aligned identifier field types that will cause mapping errors during indexing.\r\n\r\n<b>Authorization:</b> Requires a valid Bearer token and system administrator role.\r\n\r\n<b>Side Effects:</b> Read-only. Does not modify the index or any data.",
-        "parameters": [
-          {
-            "name": "maxRecordsPerContentDef",
-            "in": "query",
-            "description": "Maximum number of records to sample per content definition. Defaults to 50.",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 50
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Analysis completed successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchMappingConflictReport"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Caller is not authenticated.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Caller is authenticated but does not have system administrator access.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": [ ]
-          }
-        ]
-      }
-    },
     "/admin/search/{id}": {
       "get": {
         "tags": [
@@ -20369,18 +20420,7 @@
           "Midroll",
           "Postroll"
         ],
-        "type": "string",
-        "description": "Indicates where within a video an advertisement slot is positioned.",
-        "x-enumNames": [
-          "Preroll",
-          "Midroll",
-          "Postroll"
-        ],
-        "x-enumDescriptions": [
-          "Ad slot before the video content begins (time offset zero).",
-          "Ad slot in the middle of the video content.",
-          "Ad slot after the video content ends."
-        ]
+        "type": "string"
       },
       "AddAnnotationModel": {
         "type": "object",
@@ -20628,6 +20668,21 @@
         },
         "additionalProperties": false,
         "description": "Represents a request to create a new schedule with its initial configuration."
+      },
+      "AddUploadQueueModel": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadQueueItemModel"
+            },
+            "description": "Gets or sets the files to add to the upload queue. One entry per file.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Represents a request to add one or more files to the upload queue."
       },
       "AdminUserModel": {
         "allOf": [
@@ -21173,6 +21228,23 @@
         "additionalProperties": false,
         "description": "Represents a summary view of an asset, including its identity, location, and current status."
       },
+      "AssetPartModel": {
+        "type": "object",
+        "properties": {
+          "partNumber": {
+            "type": "integer",
+            "description": "Gets or sets the number of the part that was uploaded",
+            "format": "int32"
+          },
+          "etag": {
+            "type": "string",
+            "description": "Gets or sets the etag that was returned from the client upload of this part",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Represents a single completed part supplied by the client when completing a multipart upload directly."
+      },
       "AssetPartUploadModel": {
         "type": "object",
         "properties": {
@@ -21395,54 +21467,7 @@
           "Replacing"
         ],
         "type": "string",
-        "description": "Indicates the current processing or lifecycle status of an asset.\r\nAn asset transitions through various statuses during operations such as upload, archive, restore, and delete.",
-        "x-enumNames": [
-          "Available",
-          "Renaming",
-          "Copying",
-          "Restoring",
-          "Registering",
-          "Uploading",
-          "Archiving",
-          "Archived",
-          "PendingArchive",
-          "PendingRestore",
-          "Restored",
-          "Deleting",
-          "Moving",
-          "SlugReplaced",
-          "Updating",
-          "Error",
-          "Assembling",
-          "Clipping",
-          "Placeholder",
-          "Creating",
-          "Replacing"
-        ],
-        "x-enumFlags": true,
-        "x-enumDescriptions": [
-          "The asset is fully processed and available for access, streaming, and download.",
-          "The asset is currently being renamed.",
-          "The asset is currently being copied to a new location.",
-          "The asset is currently being restored from archive storage.",
-          "The asset is being registered from an existing storage object.",
-          "The asset is currently being uploaded via the multipart upload process.",
-          "The asset is in the process of being moved to archival storage.",
-          "The asset has been archived and is not available for direct access until restored.",
-          "The asset is queued for archival but the process has not yet started.",
-          "The asset is queued for restoration but the process has not yet started.",
-          "The asset has been restored from archive and is available for access.",
-          "The asset is in the process of being permanently deleted.",
-          "The asset is being moved to a different folder.",
-          "The asset's placeholder content has been replaced with actual media.",
-          "The asset's metadata or properties are being updated.",
-          "An error occurred during processing. Check job history for details.",
-          "The asset's multipart upload parts are being assembled into the final file.",
-          "A clip is being extracted from this video asset.",
-          "The asset is a placeholder reserving a spot before actual content is uploaded.",
-          "The asset is being created (initial processing phase).",
-          "The asset's content is being replaced with a new file."
-        ]
+        "description": "Indicates the current processing or lifecycle status of an asset.\r\nAn asset transitions through various statuses during operations such as upload, archive, restore, and delete."
       },
       "AssetTransferStatuses": {
         "enum": [
@@ -21454,23 +21479,7 @@
           "Cancelled"
         ],
         "type": "string",
-        "description": "The lifecycle state of a single asset transfer, in either direction.",
-        "x-enumNames": [
-          "Queued",
-          "Downloading",
-          "Uploading",
-          "Error",
-          "Complete",
-          "Cancelled"
-        ],
-        "x-enumDescriptions": [
-          "Transfer is queued and waiting to start.",
-          "Asset is being downloaded from the source location.",
-          "Asset is being uploaded to the destination location.",
-          "Transfer failed due to an error.",
-          "Transfer completed successfully.",
-          "Transfer was cancelled before completion."
-        ]
+        "description": "The lifecycle state of a single asset transfer, in either direction."
       },
       "AssetTypes": {
         "enum": [
@@ -21479,17 +21488,7 @@
           "Bucket"
         ],
         "type": "string",
-        "description": "Categorizes the type of an asset in the media library.",
-        "x-enumNames": [
-          "Folder",
-          "File",
-          "Bucket"
-        ],
-        "x-enumDescriptions": [
-          "A folder that can contain other assets (files and sub-folders).",
-          "A media file asset (video, audio, image, document, etc.).",
-          "A top-level storage bucket representing a root container for assets."
-        ]
+        "description": "Categorizes the type of an asset in the media library."
       },
       "AssetUploadCompletePartRequestModel": {
         "type": "object",
@@ -21502,6 +21501,21 @@
         },
         "additionalProperties": false,
         "description": "Represents a request to mark an individual upload part as completed by providing its verification tag."
+      },
+      "AssetUploadCompleteRequestModel": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetPartModel"
+            },
+            "description": "Gets or sets the completed parts (part number and etag) for every part of the upload. Required\r\nwhen the client did not call the complete-part endpoint for each part; omit it entirely to\r\ncomplete using the parts already confirmed through that endpoint instead.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Represents an optional request body for completing a multipart upload."
       },
       "AssetUploadModel": {
         "type": "object",
@@ -21535,31 +21549,6 @@
             "type": "string",
             "description": "Gets or sets the date the original upload was started",
             "format": "date-time"
-          },
-          "transferStatus": {
-            "$ref": "#/components/schemas/AssetTransferStatuses"
-          },
-          "completePercentage": {
-            "type": "number",
-            "description": "Gets or sets percent complete, 0 to 100.",
-            "format": "float",
-            "nullable": true
-          },
-          "bytesTransferred": {
-            "type": "integer",
-            "description": "Gets or sets how many bytes have been confirmed as uploaded.",
-            "format": "int64"
-          },
-          "errorMessage": {
-            "type": "string",
-            "description": "Gets or sets the failure reason, when the upload failed.",
-            "nullable": true
-          },
-          "completedDate": {
-            "type": "string",
-            "description": "Gets or sets when the upload reached a final state.",
-            "format": "date-time",
-            "nullable": true
           },
           "parts": {
             "type": "array",
@@ -21650,11 +21639,7 @@
           2
         ],
         "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Body",
-          "Head"
-        ]
+        "format": "int32"
       },
       "AssociatedAssetModel": {
         "type": "object",
@@ -21704,12 +21689,7 @@
           3
         ],
         "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Asset",
-          "External",
-          "Inline"
-        ]
+        "format": "int32"
       },
       "AssociatedAssetTypes": {
         "enum": [
@@ -21717,69 +21697,55 @@
           2
         ],
         "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Script",
-          "Style"
-        ]
+        "format": "int32"
       },
       "AudioTrackModel": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Gets or sets the unique identifier of the audio track.",
             "format": "uuid"
           },
           "bitRate": {
             "type": "integer",
-            "description": "Gets or sets the audio bit rate in bits per second.",
             "format": "int32",
             "nullable": true
           },
           "samplingRate": {
             "type": "integer",
-            "description": "Gets or sets the audio sampling rate in Hz.",
             "format": "int32",
             "nullable": true
           },
           "numChannels": {
             "type": "integer",
-            "description": "Gets or sets the number of audio channels (e.g., 1 for mono, 2 for stereo).",
             "format": "int32",
             "nullable": true
           },
           "format": {
             "type": "string",
-            "description": "Gets or sets the audio codec or format name (e.g., AAC, MP3).",
             "nullable": true
           },
           "frameRate": {
             "type": "number",
-            "description": "Gets or sets the frame rate of the audio stream.",
             "format": "double",
             "nullable": true
           },
           "frameCount": {
             "type": "integer",
-            "description": "Gets or sets the total number of audio frames.",
             "format": "int64",
             "nullable": true
           },
           "bitDepth": {
             "type": "integer",
-            "description": "Gets or sets the bit depth of the audio samples.",
             "format": "int32",
             "nullable": true
           },
           "bitRateMode": {
             "type": "string",
-            "description": "Gets or sets the bit rate mode (e.g., CBR, VBR).",
             "nullable": true
           },
           "durationSeconds": {
             "type": "number",
-            "description": "Gets or sets the duration of the audio track in seconds.",
             "format": "double",
             "nullable": true
           },
@@ -21788,7 +21754,6 @@
           },
           "trackPosition": {
             "type": "integer",
-            "description": "Gets or sets the zero-based index of this track within the media container.",
             "format": "int32",
             "nullable": true
           },
@@ -21797,12 +21762,10 @@
             "items": {
               "$ref": "#/components/schemas/AudioTrackModel"
             },
-            "description": "Gets or sets the source audio tracks that were mixed to produce this track; empty for original tracks.",
             "nullable": true
           }
         },
-        "additionalProperties": false,
-        "description": "Technical metadata for a single audio track within a media asset."
+        "additionalProperties": false
       },
       "AuthProvider": {
         "type": "object",
@@ -21852,15 +21815,12 @@
                 "type": "boolean",
                 "description": "Gets or sets a per-request override for whether the detected content region is\r\nimmediately submitted to the transcoder as a clip job.\r\nWhen null, the value from ManifestClipSettings.AutoSubmitClipJob is used.\r\nSet false to detect and persist boundaries only, leaving the clip submission\r\nto a human review step that calls the regular clip endpoint.",
                 "nullable": true
-              },
-              "detectionMode": {
-                "$ref": "#/components/schemas/BoundaryDetectionMode"
               }
             },
             "additionalProperties": false
           }
         ],
-        "description": "Represents a request to automatically detect and clip the content region of a video asset\r\nby finding its preroll/postroll boundaries — from frame perceptual hashes, from the audio\r\nenvelope, or from both."
+        "description": "Represents a request to automatically detect and clip the content region of a video asset\r\nby analyzing perceptual hashes of frames across TS chunks to find preroll/postroll boundaries."
       },
       "AvailabilityModel": {
         "type": "object",
@@ -21892,17 +21852,7 @@
           "Expired"
         ],
         "type": "string",
-        "description": "Indicates the availability status of an asset relative to its configured availability window.",
-        "x-enumNames": [
-          "Active",
-          "Embargoed",
-          "Expired"
-        ],
-        "x-enumDescriptions": [
-          "The current date falls within the asset's availability window.",
-          "The current date is before the asset's availability start date.",
-          "The current date is after the asset's availability end date."
-        ]
+        "description": "Indicates the availability status of an asset relative to its configured availability window."
       },
       "BaseIdModelGuid": {
         "type": "object",
@@ -21943,52 +21893,51 @@
         "properties": {
           "contentDefinition": {
             "type": "string",
-            "description": "Gets or sets the schema name of the content definition.",
+            "description": "Gets or sets the content definition string name of the content records that should be affected\r\nLike asset, video, etc",
             "nullable": true
           },
           "contentId": {
             "type": "string",
-            "description": "Gets or sets the identifier of the parent content record.",
+            "description": "Gets or sets the ID of the content record to apply the new or removed attributes",
             "format": "uuid"
           },
           "createNew": {
             "type": "boolean",
-            "description": "Gets or sets a value indicating whether the operation creates a new child record rather than associating an existing one."
+            "description": "Gets or sets a value indicating whether defaults to False. If true, then the attribute will be added if it doesn't already exist with a matching name"
           },
           "childId": {
             "type": "string",
-            "description": "Gets the identifier of the child content record.",
+            "description": "Gets the ID of the child attribute that's intended to be overridden with the actual value",
             "format": "uuid",
             "nullable": true,
             "readOnly": true
           },
           "childPropertyName": {
             "type": "string",
-            "description": "Gets the property name on the content definition that holds the child relationship.",
+            "description": "Gets the name of the child attribute name used in the partial return class",
             "nullable": true,
             "readOnly": true
           },
           "indexPropertyName": {
             "type": "string",
-            "description": "Gets the property name used as the existence-check index key.",
+            "description": "Gets the name of the index property used in the existence checks",
             "nullable": true,
             "readOnly": true
           },
           "name": {
             "type": "string",
-            "description": "Gets or sets the display name of the content record.",
+            "description": "Gets or sets the name of the collection that should be added or removed. If the name and the collectionId are both specified, the name is ignored.",
             "nullable": true
           },
           "contentDefinitionId": {
             "type": "string",
-            "description": "Gets the identifier of the content definition.",
+            "description": "Gets the id of the metadata content defintion, i.e. tags, collections",
             "format": "uuid",
             "nullable": true,
             "readOnly": true
           }
         },
-        "additionalProperties": false,
-        "description": "Abstract base for content operation models that target a child content relationship."
+        "additionalProperties": false
       },
       "BasicListResultModelPartialModel": {
         "type": "object",
@@ -22000,17 +21949,15 @@
               "additionalProperties": { },
               "description": "A dictionary-based model that extends CaseInsensitiveDictionary. Contains a primary key Id (Guid) and dynamic key-value pairs representing entity properties. Use GetProperty<T>(key) to access typed values."
             },
-            "description": "Gets or sets the items on this page.",
             "nullable": true
           },
           "totalItemCount": {
             "type": "integer",
-            "description": "Gets or sets the total number of items across all pages, or -1 when the total is not calculated.",
             "format": "int64"
           }
         },
         "additionalProperties": false,
-        "description": "A minimal paginated list result containing items and a total count."
+        "description": "A simple list result containing Items of the specified type and TotalItemCount for the total number of matching records."
       },
       "BatchModel": {
         "type": "object",
@@ -22020,13 +21967,11 @@
           },
           "contentDefinitionId": {
             "type": "string",
-            "description": "Gets or sets the optional content definition that scopes the operation.",
             "format": "uuid",
             "nullable": true
           },
           "schemaName": {
             "type": "string",
-            "description": "Gets or sets the optional schema name that identifies the content definition by name.",
             "nullable": true
           },
           "targetIds": {
@@ -22035,12 +21980,10 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Gets or sets the identifiers of the records the action should be applied to.",
             "nullable": true
           },
           "userId": {
             "type": "string",
-            "description": "Gets or sets the user on whose behalf the action is performed.",
             "format": "uuid"
           },
           "actionArguments": {
@@ -22048,17 +21991,15 @@
             "additionalProperties": {
               "nullable": true
             },
-            "description": "Gets or sets arbitrary key-value arguments consumed by the specific action handler.",
+            "description": "Note that we convert all incoming keys to lower first char to help with serialization for JSON later",
             "nullable": true
           },
           "resolverExempt": {
             "type": "boolean",
-            "description": "Gets or sets a value indicating whether the content resolver pipeline is bypassed for this action.",
             "nullable": true
           }
         },
-        "additionalProperties": false,
-        "description": "Payload for a batch operation targeting one or more content records."
+        "additionalProperties": false
       },
       "BatchResultModel": {
         "allOf": [
@@ -22070,7 +22011,7 @@
             "additionalProperties": false
           }
         ],
-        "description": "Result of a batch operation, containing a partial update record for each processed item."
+        "description": "Contains a list of PartialModel items representing the results of a batch operation, along with TotalItemCount indicating how many items were processed."
       },
       "BigDecimal": {
         "type": "object",
@@ -22127,26 +22068,6 @@
           }
         },
         "additionalProperties": false
-      },
-      "BoundaryDetectionMode": {
-        "enum": [
-          0,
-          1,
-          2
-        ],
-        "type": "integer",
-        "description": "Selects which signal auto-clip uses to locate the preroll/postroll boundaries.",
-        "format": "int32",
-        "x-enumNames": [
-          "PerceptualHash",
-          "Audio",
-          "Hybrid"
-        ],
-        "x-enumDescriptions": [
-          "Perceptual hashing of extracted video frames (default; original behaviour).",
-          "Audio envelope analysis of the muxed audio track.",
-          "Audio locates the boundaries and perceptual hashing runs as a second opinion,\r\n            raising the reported confidence when the two agree and lowering it when they do not."
-        ]
       },
       "BoundingBoxModel": {
         "type": "object",
@@ -22444,10 +22365,6 @@
             "type": "string",
             "description": "Gets or sets the URL of the master manifest used for clip generation.",
             "nullable": true
-          },
-          "useHlsSegmentBasedClipping": {
-            "type": "boolean",
-            "description": "Gets or sets a value indicating whether the caller requests HLS segment-based\r\nclipping (manifest rewrite + `MaterializeHlsBundle`) instead of a full\r\nMediaConvert transcode. The server-side\r\n`NomadApplicationSettings.UseHlsSegmentBasedClipping` flag must also be\r\nenabled; both must be `true` for the HLS path to be taken."
           }
         },
         "additionalProperties": false,
@@ -22459,12 +22376,7 @@
           "PublicApi",
           "RestrictedContent"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Content",
-          "PublicApi",
-          "RestrictedContent"
-        ]
+        "type": "string"
       },
       "CollectionContentModel": {
         "allOf": [
@@ -22830,12 +22742,7 @@
           3
         ],
         "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Admin",
-          "Lambda",
-          "Groundtruth"
-        ]
+        "format": "int32"
       },
       "ContentBulkMetadataUpdateModel": {
         "type": "object",
@@ -22879,28 +22786,6 @@
           },
           "changeType": {
             "$ref": "#/components/schemas/PropertyChangeTypes"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ContentDefinitionAnalysisSummary": {
-        "type": "object",
-        "properties": {
-          "schema": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "recordsAnalyzed": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "uniqueIdentifierFieldsObserved": {
-            "type": "integer",
-            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -23184,18 +23069,7 @@
           "Override",
           "Auto"
         ],
-        "type": "string",
-        "description": "Indicates how the language of a content record was determined.",
-        "x-enumNames": [
-          "Original",
-          "Override",
-          "Auto"
-        ],
-        "x-enumDescriptions": [
-          "Content is in the base/default language with no language override applied.",
-          "Content language has been explicitly overridden from the default.",
-          "Content language was determined automatically by the platform."
-        ]
+        "type": "string"
       },
       "ContentManagementTypes": {
         "enum": [
@@ -23204,12 +23078,7 @@
           3
         ],
         "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "None",
-          "DataSelector",
-          "FormSelector"
-        ]
+        "format": "int32"
       },
       "ContentResultsModel": {
         "type": "object",
@@ -23277,27 +23146,7 @@
           "Transcript",
           "Other"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Line",
-          "Word",
-          "Person",
-          "Location",
-          "Organization",
-          "CommercialItem",
-          "Event",
-          "Date",
-          "Quantity",
-          "Title",
-          "Entity",
-          "KeyPhrase",
-          "MixedSentiment",
-          "NegativeSentiment",
-          "NeutralSentiment",
-          "PositiveSentiment",
-          "Transcript",
-          "Other"
-        ]
+        "type": "string"
       },
       "ContentTypeModel": {
         "type": "object",
@@ -23654,38 +23503,7 @@
           "AnonymousUpload",
           "ClipReady"
         ],
-        "type": "string",
-        "description": "Identifies the email notification template to render and dispatch.",
-        "x-enumNames": [
-          "AssetRestored",
-          "UserApproved",
-          "CollectionShared",
-          "CollectionSharedExternal",
-          "UserInvite",
-          "AssetShared",
-          "DownloadZipFile",
-          "MediaBuilderNotification",
-          "LiveRecordingStopped",
-          "ExportSearchResults",
-          "AssetSharedExternal",
-          "AnonymousUpload",
-          "ClipReady"
-        ],
-        "x-enumDescriptions": [
-          "Notification sent when an archived asset has been restored to active storage.",
-          "Notification sent when a user account has been approved.",
-          "Notification sent when a collection is shared with internal users.",
-          "Notification sent when a collection is shared with external recipients.",
-          "Invitation email sent to a new user to join the platform.",
-          "Notification sent when an asset is shared with internal users.",
-          "Notification sent when a bulk download ZIP file is ready.",
-          "Notification sent when a Media Builder job completes.",
-          "Notification sent when a live recording has stopped.",
-          "Notification sent when a search results export is ready for download.",
-          "Notification sent when an asset is shared with external recipients.",
-          "Notification sent when an anonymous upload is received.",
-          "Notification sent when a requested clip has been created and is ready."
-        ]
+        "type": "string"
       },
       "EmbeddingTypes": {
         "enum": [
@@ -23696,23 +23514,7 @@
           "Audio",
           "SearchText"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "MediaSummary",
-          "Text",
-          "Image",
-          "Video",
-          "Audio",
-          "SearchText"
-        ],
-        "x-enumDescriptions": [
-          "Embedding vector generated from the full media summary, combining text, image, and audio features.",
-          "Embedding vector generated from the text content of the asset.",
-          "Embedding vector generated from image frames or the primary image of the asset.",
-          "Embedding vector generated from video content including visual and temporal features.",
-          "Embedding vector generated from the audio track of the asset.",
-          "Embedding vector generated specifically for semantic text search queries."
-        ]
+        "type": "string"
       },
       "FaceMatchTypes": {
         "enum": [
@@ -23723,38 +23525,21 @@
           "Blurry"
         ],
         "type": "string",
-        "description": "Categorizes the type of facial recognition match between a detected face and a person.\r\nUsed to filter face results when querying person faces.",
-        "x-enumNames": [
-          "Automatch",
-          "ProbableMatch",
-          "NotMatch",
-          "ConfirmedMatch",
-          "Blurry"
-        ],
-        "x-enumDescriptions": [
-          "The face was automatically matched to the person by the AI with high confidence.",
-          "The face is a probable match that requires manual review to confirm.",
-          "The face has been reviewed and determined to not match the person.",
-          "The face has been manually reviewed and confirmed as a match for the person.",
-          "The detected face is too blurry for reliable matching."
-        ]
+        "description": "Categorizes the type of facial recognition match between a detected face and a person.\r\nUsed to filter face results when querying person faces."
       },
       "FaceModel": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Gets or sets the unique identifier of the face detection record.",
             "format": "uuid"
           },
           "confidence": {
             "type": "number",
-            "description": "Gets or sets the detection confidence score; for grouped faces this is the average across all bounding boxes.",
             "format": "double"
           },
           "externalFaceId": {
             "type": "string",
-            "description": "Gets or sets the identifier returned by the external AI service for this face.",
             "nullable": true
           },
           "boundingBoxes": {
@@ -23762,24 +23547,20 @@
             "items": {
               "$ref": "#/components/schemas/BoundingBoxModel"
             },
-            "description": "Gets or sets the bounding box regions where this face was detected in the image or video frame.",
             "nullable": true
           },
           "sourceId": {
             "type": "string",
-            "description": "Gets or sets the identifier of the source asset or frame from which the face was detected.",
             "format": "uuid",
             "nullable": true
           },
           "similarityScore": {
             "type": "integer",
-            "description": "Gets or sets the similarity score when matched against a known person; null if not matched.",
             "format": "int32",
             "nullable": true
           },
           "personId": {
             "type": "string",
-            "description": "Gets or sets the identifier of the matched person record; null if unidentified.",
             "format": "uuid",
             "nullable": true
           },
@@ -23788,29 +23569,24 @@
             "items": {
               "$ref": "#/components/schemas/SegmentModel"
             },
-            "description": "Gets or sets the video segments in which this face appears.",
             "nullable": true
           },
           "rotationCorrection": {
             "type": "integer",
-            "description": "Gets or sets the rotation correction angle applied to orient the face correctly.",
             "format": "int32",
             "nullable": true
           },
           "celebrityExternalId": {
             "type": "string",
-            "description": "Gets or sets the external identifier of the matched celebrity from the AI service.",
             "nullable": true
           },
           "celebrityConfidence": {
             "type": "number",
-            "description": "Gets or sets the confidence score for the celebrity match.",
             "format": "float",
             "nullable": true
           },
           "celebrityName": {
             "type": "string",
-            "description": "Gets or sets the name of the matched celebrity.",
             "nullable": true
           },
           "celebrityUrls": {
@@ -23818,17 +23594,14 @@
             "items": {
               "type": "string"
             },
-            "description": "Gets or sets reference URLs providing more information about the matched celebrity.",
             "nullable": true
           },
           "isPersonValidated": {
             "type": "boolean",
-            "description": "Gets or sets a value indicating whether the person match has been manually validated.",
             "nullable": true
           }
         },
-        "additionalProperties": false,
-        "description": "A face detected in an image or video frame by AI analysis."
+        "additionalProperties": false
       },
       "FieldModel": {
         "type": "object",
@@ -23937,8 +23710,7 @@
               },
               "name": {
                 "type": "string",
-                "nullable": true,
-                "readOnly": true
+                "nullable": true
               },
               "authenticationType": {
                 "type": "string",
@@ -24222,13 +23994,11 @@
         "properties": {
           "key": {
             "type": "string",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           },
           "value": {
             "type": "string",
-            "nullable": true,
-            "readOnly": true
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -24296,17 +24066,14 @@
             "items": {
               "$ref": "#/components/schemas/CollectionContentModel"
             },
-            "description": "Gets or sets the list items.",
             "nullable": true
           },
           "hasItems": {
             "type": "boolean",
-            "description": "Gets a value indicating whether the list contains at least one item.",
             "readOnly": true
           }
         },
-        "additionalProperties": false,
-        "description": "A non-paginated list result."
+        "additionalProperties": false
       },
       "ListModelRelatedContentModel": {
         "type": "object",
@@ -24316,17 +24083,14 @@
             "items": {
               "$ref": "#/components/schemas/RelatedContentModel"
             },
-            "description": "Gets or sets the list items.",
             "nullable": true
           },
           "hasItems": {
             "type": "boolean",
-            "description": "Gets a value indicating whether the list contains at least one item.",
             "readOnly": true
           }
         },
-        "additionalProperties": false,
-        "description": "A non-paginated list result."
+        "additionalProperties": false
       },
       "ListModelTagContentModel": {
         "type": "object",
@@ -24336,17 +24100,14 @@
             "items": {
               "$ref": "#/components/schemas/TagContentModel"
             },
-            "description": "Gets or sets the list items.",
             "nullable": true
           },
           "hasItems": {
             "type": "boolean",
-            "description": "Gets a value indicating whether the list contains at least one item.",
             "readOnly": true
           }
         },
-        "additionalProperties": false,
-        "description": "A non-paginated list result."
+        "additionalProperties": false
       },
       "ListResultModelAdminUserModel": {
         "type": "object",
@@ -25454,24 +25215,7 @@
           "Realtime",
           "Basic"
         ],
-        "type": "string",
-        "description": "Identifies the underlying streaming technology used for a live channel.\r\nThe channel type determines which encoding, input, and output options are available.",
-        "x-enumNames": [
-          "Normal",
-          "EdgeCaster",
-          "Ivs",
-          "External",
-          "Realtime",
-          "Basic"
-        ],
-        "x-enumDescriptions": [
-          "A standard AWS MediaLive channel supporting full encoding pipeline configuration.",
-          "A channel backed by the EdgeCaster hardware encoder.",
-          "A channel backed by AWS Interactive Video Service (IVS) for ultra-low-latency streaming.",
-          "A channel that references an externally managed stream not provisioned through this platform.",
-          "A real-time, sub-second latency channel (e.g. Red5 Pro, IVS Realtime).",
-          "A simplified channel type with a reduced feature set, suitable for straightforward streaming scenarios."
-        ]
+        "type": "string"
       },
       "LiveClipRequestModel": {
         "allOf": [
@@ -26002,25 +25746,7 @@
           "StateUpdate",
           "Resume"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Create",
-          "Update",
-          "Delete",
-          "Sync",
-          "Start",
-          "Stop",
-          "Initialize",
-          "InitializeInputs",
-          "Pause",
-          "Next",
-          "TrackOutput",
-          "Cleanup",
-          "CdnEndpointInfo",
-          "UpdateEvent",
-          "StateUpdate",
-          "Resume"
-        ]
+        "type": "string"
       },
       "LiveRequestModel": {
         "allOf": [
@@ -26062,14 +25788,7 @@
           "ScheduleEvent",
           "DeliveryPackage"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Channel",
-          "Input",
-          "ScheduleEvent",
-          "DeliveryPackage"
-        ],
-        "x-enumFlags": true
+        "type": "string"
       },
       "LiveResultModelLiveChannelModel": {
         "type": "object",
@@ -26634,29 +26353,7 @@
           "IsPendingInvitation"
         ],
         "type": "string",
-        "description": "Indicates the result status of a login or account-related operation.\r\nReturned in the LoginStatus field of login and account response models.",
-        "x-enumNames": [
-          "TwoFactorSetupRequired",
-          "TwoFactorCodeRequired",
-          "IsDisabled",
-          "IsPendingEmailConfirmation",
-          "IsPendingNewAccountSignup",
-          "IsPendingAccountMigrationSignup",
-          "IsPendingNewPassword",
-          "IsExpired",
-          "IsPendingInvitation"
-        ],
-        "x-enumDescriptions": [
-          "The user must set up two-factor authentication before they can log in.",
-          "The user must provide a two-factor authentication code to complete login.",
-          "The user account is disabled and cannot be used.",
-          "The user must verify their email address before they can log in.",
-          "The user account registration is not complete. The user must finish the signup process.",
-          "The user account requires migration signup to complete the transition to the current system.",
-          "The user must set a new password before they can log in (e.g., after an admin-initiated password reset).",
-          "The user account has expired and is no longer accessible.",
-          "The user has a pending guest invitation that must be completed via the register-guest endpoint."
-        ]
+        "description": "Indicates the result status of a login or account-related operation.\r\nReturned in the LoginStatus field of login and account response models."
       },
       "LogoutRequestModel": {
         "type": "object",
@@ -26889,155 +26586,12 @@
           "EmbeddingTypes",
           "AssetTransferStatuses",
           "AvailabilityStatuses",
-          "IvsRealtimeRecordingModes",
-          "UserBehaviorEventTypes",
           "VideoTrackingStatuses",
           "VideoTrackingAlertStatuses",
           "FrameStateFlags",
           "NewsRoomFailureTypes"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "PageTemplates",
-          "Fields",
-          "LookupTypes",
-          "ContentTemplates",
-          "ContentDefinitions",
-          "ContentTypes",
-          "ContentDefinitionGroups",
-          "WorkflowStatuses",
-          "DataSelectorContentDefinitions",
-          "Content",
-          "TemplatePacks",
-          "PopularTags",
-          "AllTags",
-          "PropertyValues",
-          "MediaTypes",
-          "AssetTypes",
-          "ContentFields",
-          "FormSelectorContentDefinitions",
-          "CustomRenderers",
-          "ConstantContactCampaigns",
-          "Languages",
-          "SecurityGroups",
-          "Collections",
-          "SecurityPermissions",
-          "CustomLabelerTypes",
-          "CustomLabelerStatuses",
-          "Labels",
-          "Users",
-          "MeetingSources",
-          "LiveScheduleEventStatuses",
-          "LiveExternalOutputProfiles",
-          "LiveScheduleEventTypes",
-          "LiveChannelStatuses",
-          "LiveInputCodecs",
-          "LiveInputMaximumBitrates",
-          "LiveInputResolutions",
-          "LiveInputStatuses",
-          "LiveInputTypes",
-          "NodeTypes",
-          "LiveChannelTypes",
-          "LiveOutputTypes",
-          "Roles",
-          "NewsSystems",
-          "NprProfileTypes",
-          "PaymentStatuses",
-          "PingStatuses",
-          "PropertyValueTypes",
-          "ScheduleItemSearchTypes",
-          "ScheduleItemSourceTypes",
-          "ScheduleItemTypes",
-          "ScheduleStatuses",
-          "ScheduleTypes",
-          "StorageClasses",
-          "SubtitleTypes",
-          "SubtitleValueTypes",
-          "TextEntityTypes",
-          "UploadOverwriteOptions",
-          "UserSessionStatuses",
-          "VideoSegmentTypes",
-          "VideoTrackingEvents",
-          "BatchActionProcessorExecutionTypes",
-          "VideoTrackingAttributes",
-          "TemplatePackTypes",
-          "AdServerTypes",
-          "AdSlotTypes",
-          "AssetRestoreTiers",
-          "AssetStatuses",
-          "BatchActions",
-          "BucketTypes",
-          "CloudFrontDistributions",
-          "ContentAttributes",
-          "ContentLanguageStatuses",
-          "ContentTextTypes",
-          "ContentUnitOfWorkActions",
-          "DataFilterFieldOperators",
-          "DataIndexTypes",
-          "DataJoinFilterFieldClauses",
-          "DataPatchTypes",
-          "DataSortHeading",
-          "EmailTypes",
-          "EndPointSystems",
-          "FaceMatchTypes",
-          "FeaturedContentTypes",
-          "ImageTypes",
-          "IvsChannelTypes",
-          "IvsLatencyTypes",
-          "JobProcessorActions",
-          "LiveRequestActions",
-          "LiveRequestTargets",
-          "LoginResponseStatuses",
-          "MediaConvertTypes",
-          "MessageInfoTypes",
-          "MetadataTypes",
-          "ModelContainerModes",
-          "DayOfWeek",
-          "VideoTrackingActions",
-          "FrameIngestActions",
-          "ArchivePrefixTypes",
-          "LiveRecordingStatuses",
-          "LiveContentStatuses",
-          "LiveScheduleStatuses",
-          "ContentActionTypes",
-          "LiveChannelRealtimeTypes",
-          "MediaLiveOutputTypes",
-          "TextCaptionTypes",
-          "LiveStateUpdateModes",
-          "MediaBuilderItemSourceTypes",
-          "MediaBuilderStatuses",
-          "LocalRestoreProfiles",
-          "UserSessionTrackingTypes",
-          "ShareDurationTypes",
-          "Transcoders",
-          "BulkIteratorStates",
-          "ResourceClass",
-          "ContentVersions",
-          "ContentFieldClassifications",
-          "ContentAttributeFlags",
-          "ContentDataIndexTypes",
-          "ImportActions",
-          "ContentMutatorClassifications",
-          "ShareTypes",
-          "SharePermissions",
-          "ShareStatuses",
-          "SearchTextFields",
-          "PropertyChangeTypes",
-          "UploadReplaceOptions",
-          "AdvanceSearchFields",
-          "RollupMeasurementSourceTypes",
-          "StatMeasurementAggregationOperationTypes",
-          "Transcribers",
-          "EmbeddingTypes",
-          "AssetTransferStatuses",
-          "AvailabilityStatuses",
-          "IvsRealtimeRecordingModes",
-          "UserBehaviorEventTypes",
-          "VideoTrackingStatuses",
-          "VideoTrackingAlertStatuses",
-          "FrameStateFlags",
-          "NewsRoomFailureTypes"
-        ]
+        "type": "string"
       },
       "MeasurementInfo": {
         "type": "object",
@@ -27201,26 +26755,7 @@
           "Other",
           "MediaManifest"
         ],
-        "type": "string",
-        "description": "Classifies the primary media type of an asset file, used to drive playback, thumbnailing, and transcoding behaviour.",
-        "x-enumNames": [
-          "Image",
-          "Video",
-          "Document",
-          "Text",
-          "Audio",
-          "Other",
-          "MediaManifest"
-        ],
-        "x-enumDescriptions": [
-          "A still image file (e.g. JPEG, PNG, GIF, TIFF).",
-          "A video file (e.g. MP4, MOV, MXF).",
-          "A document file (e.g. PDF, Word, Excel).",
-          "A plain-text file (e.g. TXT, CSV, XML, JSON).",
-          "An audio-only file (e.g. MP3, WAV, AAC).",
-          "A file type that does not fall into any other category.",
-          "A streaming manifest file (e.g. HLS .m3u8, DASH .mpd) that references segmented media."
-        ]
+        "type": "string"
       },
       "MessageInfoModel": {
         "allOf": [
@@ -27235,7 +26770,6 @@
               },
               "message": {
                 "type": "string",
-                "description": "Gets or sets the message text.",
                 "nullable": true
               },
               "fieldNames": {
@@ -27243,14 +26777,12 @@
                 "items": {
                   "type": "string"
                 },
-                "description": "Gets or sets the names of the fields this message relates to; empty for non-field-specific messages.",
                 "nullable": true
               }
             },
             "additionalProperties": false
           }
-        ],
-        "description": "A structured message attached to an API response, such as a validation error or informational notice."
+        ]
       },
       "MessageInfoTypes": {
         "enum": [
@@ -27259,13 +26791,7 @@
           "ValidationError",
           "Error"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Information",
-          "Warning",
-          "ValidationError",
-          "Error"
-        ]
+        "type": "string"
       },
       "MetadataTypes": {
         "enum": [
@@ -27380,241 +26906,10 @@
           "TwelveLabsVideoEmbedding",
           "TwelveLabsAudioEmbedding",
           "TwelveLabsImageEmbedding",
-          "ManifestHashScan",
           "CustomType"
         ],
         "type": "string",
-        "description": "Note that this is a PARTIAL list of types that we need to know about",
-        "x-enumNames": [
-          "DocumentContent",
-          "ComprehendKeyPhrases",
-          "ComprehendEntities",
-          "RekognitionImageIndexFaces",
-          "RekognitionImageSearchFaces",
-          "RekognitionImageLabels",
-          "RekognitionImageCelebrityRecognition",
-          "RekognitionVideoLabels",
-          "TextractAnalyzeDocument",
-          "Transcribe",
-          "TranscribeVtt",
-          "TranscribeTranslation",
-          "TranscribeVttTranslation",
-          "RekognitionVideoCelebrityRecognition",
-          "RekognitionVideoPersonTracking",
-          "RekognitionVideoFaceDetection",
-          "ImageInfo",
-          "Transcode",
-          "Clip",
-          "MediaInfo",
-          "RekognitionImageDetectText",
-          "RekognitionImageUnsafeContent",
-          "RekognitionVideoUnsafeContent",
-          "Screenshot",
-          "ThumbnailSheet",
-          "ThumbnailImage",
-          "RekognitionImageCustomLabels",
-          "PreviewImage",
-          "RekognitionVideoTextDetection",
-          "RekognitionVideoSegmentDetection",
-          "NomadVideoSegmentDetection",
-          "TranscribeMedical",
-          "PreviewAudio",
-          "Text",
-          "AssetManifest",
-          "IntervalSegments",
-          "TranscribeMedicalText",
-          "TranscribeMedicalTranslation",
-          "AdobeMetadata",
-          "AdobeMetadataText",
-          "ImageExif",
-          "TextractImageDetectText",
-          "AdSegments",
-          "Vmap",
-          "Vast",
-          "MediaTailorVideo",
-          "TranscribeSrt",
-          "TranscribeRaw",
-          "Subtitles",
-          "ProcessorJobs",
-          "OfficeDocument",
-          "TranscriptionContainer",
-          "ComprehendSentiment",
-          "ComprehendLanguage",
-          "OriginalSourceVideo",
-          "ImportManifest",
-          "TranscribeScc",
-          "TranscribeTtml",
-          "TranscribeDfxp",
-          "TranscribeSmptett",
-          "TranscribeXml",
-          "TranscribeQt",
-          "TranscribeRt",
-          "TranscribeSsa",
-          "TranscribeAss",
-          "TranscribeSbv",
-          "TranscribeSmi",
-          "TranscribeSami",
-          "TranscribeStl",
-          "TranscribeSub",
-          "AssociatedAsset",
-          "ContactSheetVTT",
-          "ContactSheetTimecodes",
-          "ContactSheetImage",
-          "RenderedImage",
-          "RokuBif",
-          "AzureImageAnalysis",
-          "AzureImageVectorize",
-          "AzureTextVectorize",
-          "ContentVectors",
-          "SportLogiqVideoAnalysis",
-          "AnimatedGif",
-          "NomadMediaTasks",
-          "GooglePhotosMetadata",
-          "TwelveLabsVideoAnalysis",
-          "BedrockImageAnalysis",
-          "BedrockTextVectorizer",
-          "BedrockImageVectorize",
-          "BedrockTextSummary",
-          "GeneratedImage",
-          "TranscodeIvsRecording",
-          "TranscriptSummary",
-          "SearchCache",
-          "WhisperTranscription",
-          "BitmovinSceneDetection",
-          "BedrockDataAutomation",
-          "BedrockSceneDetection",
-          "MobiusLabsLlmSegmentContent",
-          "AudioWaveform",
-          "CantoDetailJson",
-          "AudioId3",
-          "WasabiAir",
-          "NovaTextEmbedding",
-          "NovaImageEmbedding",
-          "NovaAudioEmbedding",
-          "NovaVideoEmbedding",
-          "NovaDocumentEmbedding",
-          "TwelveLabsBedrockVideoAnalysis",
-          "TwelveLabsVideoEmbedding",
-          "TwelveLabsAudioEmbedding",
-          "TwelveLabsImageEmbedding",
-          "ManifestHashScan",
-          "CustomType"
-        ],
-        "x-enumDescriptions": [
-          "Extracted text content from document assets such as PDF and Office files.",
-          "Key phrases identified by AWS Comprehend NLP analysis.",
-          "Named entities (people, places, organisations) identified by AWS Comprehend NLP analysis.",
-          "Face index data produced by AWS Rekognition image face indexing.",
-          "Face search results from AWS Rekognition image face matching against the index.",
-          "Visual object and scene labels detected by AWS Rekognition on images.",
-          "Celebrities identified by AWS Rekognition in image assets.",
-          "Visual object and scene labels detected by AWS Rekognition across video frames.",
-          "Structured document analysis results (forms, tables, key-value pairs) from AWS Textract.",
-          "Speech-to-text transcription output from AWS Transcribe.",
-          "WebVTT subtitle file produced by AWS Transcribe.",
-          "Translated transcription text produced by AWS Transcribe combined with AWS Translate.",
-          "Translated WebVTT subtitle file produced by AWS Transcribe combined with AWS Translate.",
-          "Celebrities identified by AWS Rekognition across video frames.",
-          "Person bounding-box tracking data from AWS Rekognition video analysis.",
-          "Face detection and attribute data from AWS Rekognition video analysis.",
-          "Basic image properties such as dimensions, colour space, and format.",
-          "Transcoded video or audio rendition produced by a transcode job.",
-          "Video or audio clip segment extracted from the parent asset.",
-          "Technical media properties (codecs, bitrates, frame rate, duration) from MediaInfo analysis.",
-          "Text detected within images by AWS Rekognition OCR.",
-          "Unsafe or explicit content moderation labels from AWS Rekognition applied to images.",
-          "Unsafe or explicit content moderation labels from AWS Rekognition applied to video.",
-          "Still image captured from a specific point in a video asset.",
-          "Contact-sheet sprite image showing a grid of thumbnail frames from a video.",
-          "Primary thumbnail image representing the asset.",
-          "Custom-trained model labels detected by AWS Rekognition Custom Labels on images.",
-          "Resized or watermarked preview version of an image asset.",
-          "Text detected within video frames by AWS Rekognition OCR.",
-          "Shot and segment boundary data detected by AWS Rekognition on video.",
-          "Shot and segment boundary data detected by the Nomad internal video analysis engine.",
-          "Medical-domain speech-to-text transcription from AWS Transcribe Medical.",
-          "Compressed audio preview rendition of the asset.",
-          "Plain-text representation or extract of the asset content.",
-          "Manifest file describing the asset's constituent parts or renditions.",
-          "Time-based interval segment definitions for the asset.",
-          "Plain-text output from AWS Transcribe Medical.",
-          "Translated medical transcription text from AWS Transcribe Medical combined with AWS Translate.",
-          "XMP metadata embedded in or sidecar to an Adobe-compatible asset.",
-          "Plain-text extraction of XMP metadata values from an Adobe-compatible asset.",
-          "EXIF technical metadata extracted from image files.",
-          "Text detected in images by AWS Textract OCR.",
-          "Advertisement break segment markers within video content.",
-          "VMAP ad schedule XML document for server-side ad insertion.",
-          "VAST ad tag XML document for video ad serving.",
-          "Video rendition produced for or processed by AWS MediaTailor ad insertion.",
-          "SRT subtitle file produced by transcription.",
-          "Raw unformatted transcription JSON output from AWS Transcribe.",
-          "Subtitle or caption track associated with the asset.",
-          "Record of processor jobs executed against this asset.",
-          "Office document rendition (DOCX, XLSX, PPTX) associated with the asset.",
-          "Container record grouping all transcription-related metadata for the asset.",
-          "Sentiment analysis results (positive, negative, neutral, mixed) from AWS Comprehend.",
-          "Dominant language detection results from AWS Comprehend.",
-          "Reference to the original source video file prior to any processing.",
-          "Manifest tracking the state and progress of an asset import operation.",
-          "SCC caption file produced by transcription.",
-          "TTML subtitle file produced by transcription.",
-          "DFXP caption file produced by transcription.",
-          "SMPTETT caption file produced by transcription.",
-          "XML caption file produced by transcription.",
-          "QuickTime caption file produced by transcription.",
-          "RealText caption file produced by transcription.",
-          "SSA subtitle file produced by transcription.",
-          "ASS subtitle file produced by transcription.",
-          "SBV subtitle file produced by transcription (YouTube caption format).",
-          "SMI caption file produced by transcription.",
-          "SAMI caption file produced by transcription.",
-          "STL subtitle file produced by transcription.",
-          "SUB subtitle file produced by transcription.",
-          "Placeholder for an associated asset relationship; not yet implemented.",
-          "WebVTT file mapping timestamps to contact-sheet frame positions for video scrubbing.",
-          "Timecode index for frames within a contact-sheet image.",
-          "Sprite image used as the contact sheet for video frame scrubbing.",
-          "Rendered output image produced from a template or compositing operation.",
-          "Roku BIF (Base Index Frames) trick-play file for thumbnail scrubbing on Roku devices.",
-          "Image analysis results (objects, tags, captions, colours) from Azure Computer Vision.",
-          "Image embedding vector produced by Azure Computer Vision for semantic image search.",
-          "Text embedding vector produced by Azure AI for semantic text search.",
-          "Combined content embedding vectors used for cross-modal semantic search.",
-          "Sports analytics and event data produced by SportLogiq video analysis.",
-          "Animated GIF rendition generated from a video asset.",
-          "Nomad Media task execution records associated with the asset.",
-          "Metadata imported from Google Photos for the asset.",
-          "Video understanding and analysis results from TwelveLabs AI.",
-          "Image analysis results from Amazon Bedrock foundation models.",
-          "Text embedding vector produced by Amazon Bedrock for semantic text search.",
-          "Image embedding vector produced by Amazon Bedrock for semantic image search.",
-          "AI-generated text summary of the asset content produced by Amazon Bedrock.",
-          "AI-generated image associated with the asset.",
-          "Transcoded rendition produced from an AWS IVS live recording.",
-          "AI-generated summary of the asset's transcript or spoken content.",
-          "Cached search index data for the asset, used to accelerate search queries.",
-          "Speech-to-text transcription produced by OpenAI Whisper.",
-          "Scene detection and chapter segmentation data from Bitmovin video analysis.",
-          "Structured data extraction results from Amazon Bedrock Data Automation.",
-          "Scene detection results from Amazon Bedrock video analysis.",
-          "LLM-generated segment content and annotations from MobiusLabs analysis.",
-          "Audio waveform data for visual playback display in the player UI.",
-          "Asset detail JSON imported from the Canto DAM system.",
-          "ID3 tag metadata embedded in audio files.",
-          "AI recognition and analysis results from Wasabi AiR.",
-          "Text embedding vector produced by Amazon Nova for semantic text search.",
-          "Image embedding vector produced by Amazon Nova for semantic image search.",
-          "Audio embedding vector produced by Amazon Nova for semantic audio search.",
-          "Video embedding vector produced by Amazon Nova for semantic video search.",
-          "Document embedding vector produced by Amazon Nova for semantic document search.",
-          "Video analysis results from TwelveLabs processed via Amazon Bedrock.",
-          "Video embedding vector produced by TwelveLabs for semantic video search.",
-          "Audio embedding vector produced by TwelveLabs for semantic audio search.",
-          "Image embedding vector produced by TwelveLabs for semantic image search.",
-          "Perceptual hash scan data for every TS chunk in a video manifest, produced during auto-clip boundary detection.",
-          "User-defined custom metadata type for tenant-specific extensions."
-        ]
+        "description": "Note that this is a PARTIAL list of types that we need to know about"
       },
       "NomadCommonModelsAdminAssetLabelModel": {
         "type": "object",
@@ -27874,28 +27169,6 @@
         "additionalProperties": false,
         "description": "Represents a single S3 version entry in the object version history panel."
       },
-      "ParticipantTokenResponse": {
-        "type": "object",
-        "properties": {
-          "participantToken": {
-            "type": "string",
-            "description": "Gets or sets the IVS-issued participant token, passed directly to the SDK Stage constructor.",
-            "nullable": true
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Gets or sets the token expiry time (ISO 8601). Maximum 1 hour per AWS constraint.",
-            "format": "date-time"
-          },
-          "stageArn": {
-            "type": "string",
-            "description": "Gets or sets the IVS stage ARN for the channel, echoed back so the client does not need to re-fetch.",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "Response model for the IVS participant token endpoint."
-      },
       "PersonFaceModel": {
         "type": "object",
         "properties": {
@@ -28125,19 +27398,7 @@
           "SessionDeactivated"
         ],
         "type": "string",
-        "description": "Indicates the status returned from a session ping/keep-alive request.",
-        "x-enumNames": [
-          "Normal",
-          "ChatDisabled",
-          "AccountExpired",
-          "SessionDeactivated"
-        ],
-        "x-enumDescriptions": [
-          "The session is active and healthy. No action needed.",
-          "Chat functionality has been disabled for this session.",
-          "The user's account has expired. The client should end the session and redirect to the login page.",
-          "The session has been deactivated (e.g., replaced by a newer login when single-session enforcement is enabled). The client should end the session."
-        ]
+        "description": "Indicates the status returned from a session ping/keep-alive request."
       },
       "PortalLoginResponseModel": {
         "allOf": [
@@ -28182,11 +27443,7 @@
           "Replace",
           "Clear"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Replace",
-          "Clear"
-        ]
+        "type": "string"
       },
       "PublishScheduleRequestModel": {
         "required": [
@@ -28865,13 +28122,7 @@
           "Newest",
           "NewestNotPlayed"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Random",
-          "RandomWithinDateRange",
-          "Newest",
-          "NewestNotPlayed"
-        ]
+        "type": "string"
       },
       "ScheduleItemSourceTypes": {
         "enum": [
@@ -28880,25 +28131,14 @@
           "VideoAsset",
           "LiveChannel"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "PlaylistSchedule",
-          "SearchFilters",
-          "VideoAsset",
-          "LiveChannel"
-        ]
+        "type": "string"
       },
       "ScheduleItemTypes": {
         "enum": [
           "Asset",
           "Dynamic"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Asset",
-          "Dynamic"
-        ],
-        "x-enumFlags": true
+        "type": "string"
       },
       "ScheduleModel": {
         "type": "object",
@@ -28986,25 +28226,7 @@
           "Stopping",
           "Error"
         ],
-        "type": "string",
-        "description": "Describes the current operational status of a live schedule.\r\nA schedule progresses through these states as it is started, run, and stopped.",
-        "x-enumNames": [
-          "New",
-          "Stopped",
-          "Starting",
-          "Running",
-          "Stopping",
-          "Error"
-        ],
-        "x-enumFlags": true,
-        "x-enumDescriptions": [
-          "The schedule has been defined but has not been started.",
-          "The schedule has been stopped and is no longer processing events.",
-          "The schedule is being activated and will begin processing events shortly.",
-          "The schedule is active and processing events according to the configured timeline.",
-          "The schedule is being deactivated and will stop processing new events.",
-          "The schedule encountered an error. Review the schedule details for more information."
-        ]
+        "type": "string"
       },
       "ScheduleTypes": {
         "enum": [
@@ -29012,13 +28234,7 @@
           "IntelligentSchedule",
           "IntelligentPlaylist"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Playlist",
-          "IntelligentSchedule",
-          "IntelligentPlaylist"
-        ],
-        "x-enumFlags": true
+        "type": "string"
       },
       "ScreenshotModel": {
         "type": "object",
@@ -29038,16 +28254,7 @@
           1
         ],
         "type": "integer",
-        "description": "Controls how multiple Nomad.Common.Search.SearchFilter conditions are combined in a search query.",
-        "format": "int32",
-        "x-enumNames": [
-          "And",
-          "Or"
-        ],
-        "x-enumDescriptions": [
-          "All filter conditions must match (logical AND). This is the default behaviour.",
-          "At least one filter condition must match (logical OR)."
-        ]
+        "format": "int32"
       },
       "SearchFieldModel": {
         "type": "object",
@@ -29086,18 +28293,15 @@
         "properties": {
           "fieldName": {
             "type": "string",
-            "description": "Gets or sets the name of the field to filter on.",
             "nullable": true
           },
           "operator": {
             "$ref": "#/components/schemas/SearchFilterOperators"
           },
           "includeNull": {
-            "type": "boolean",
-            "description": "Gets or sets a value indicating whether records where the field is null are included in results.\r\nWhen `true`, null values match alongside the normal operator evaluation."
+            "type": "boolean"
           },
           "values": {
-            "description": "Gets or sets the value or array of values to compare against the field.\r\nPass a single value for scalar comparisons or a `string[]` / `object[]` for multi-value matching.",
             "nullable": true
           },
           "properties": {
@@ -29105,13 +28309,12 @@
             "additionalProperties": {
               "nullable": true
             },
-            "description": "Gets the dictionary of extended filter properties used for advanced or provider-specific filter options.",
+            "description": "Note that we convert all incoming keys to lower first char to help with serialization for JSON later",
             "nullable": true,
             "readOnly": true
           }
         },
-        "additionalProperties": false,
-        "description": "Represents a single field-level filter condition within a Nomad.Common.Search.SearchModel query.\r\nFilters are combined using the Nomad.Common.Search.SearchModel.FilterBinder operator (AND or OR)."
+        "additionalProperties": false
       },
       "SearchFilterOperators": {
         "enum": [
@@ -29128,106 +28331,7 @@
           10
         ],
         "type": "integer",
-        "description": "Defines the comparison operators available when building search filters.\r\nEach operator controls how a field value is compared to the supplied filter value.",
-        "format": "int32",
-        "x-enumNames": [
-          "Equals",
-          "NotEquals",
-          "Contains",
-          "NotContains",
-          "Like",
-          "NotLike",
-          "LessThan",
-          "GreaterThan",
-          "LessThanEquals",
-          "GreaterThanEquals",
-          "Prefix"
-        ],
-        "x-enumDescriptions": [
-          "Matches records where the field value exactly equals the supplied value.",
-          "Matches records where the field value does not equal the supplied value.",
-          "Matches records where the field value contains the supplied substring.",
-          "Matches records where the field value does not contain the supplied substring.",
-          "Matches records using a wildcard pattern on the field value (use * as the wildcard character).",
-          "Matches records where the field value does not match the supplied wildcard pattern.",
-          "Matches records where the field value is strictly less than the supplied value.",
-          "Matches records where the field value is strictly greater than the supplied value.",
-          "Matches records where the field value is less than or equal to the supplied value.",
-          "Matches records where the field value is greater than or equal to the supplied value.",
-          "Matches records where the field value begins with the supplied prefix string."
-        ]
-      },
-      "SearchMappingConflict": {
-        "type": "object",
-        "properties": {
-          "fieldName": {
-            "type": "string",
-            "nullable": true
-          },
-          "isCrossContentDefinition": {
-            "type": "boolean",
-            "description": "True when the conflicting observations come from more than one content definition.\r\nFalse when the conflict is within records of a single content definition (data quality issue)."
-          },
-          "observations": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SearchMappingObservation"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "SearchMappingConflictReport": {
-        "type": "object",
-        "properties": {
-          "totalRecordsAnalyzed": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "contentDefinitions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContentDefinitionAnalysisSummary"
-            },
-            "nullable": true
-          },
-          "conflicts": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SearchMappingConflict"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "SearchMappingObservation": {
-        "type": "object",
-        "properties": {
-          "contentDefinitionSchema": {
-            "type": "string",
-            "nullable": true
-          },
-          "contentDefinitionTitle": {
-            "type": "string",
-            "nullable": true
-          },
-          "recordId": {
-            "type": "string",
-            "nullable": true
-          },
-          "mappingType": {
-            "type": "string",
-            "description": "The normalized OpenSearch-equivalent type (text, long, double, boolean, date, keyword, object).",
-            "nullable": true
-          },
-          "sampleValue": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
+        "format": "int32"
       },
       "SearchModel": {
         "type": "object",
@@ -29572,7 +28676,6 @@
         "properties": {
           "fieldName": {
             "type": "string",
-            "description": "Gets or sets the name of the field to sort by.",
             "nullable": true
           },
           "sortType": {
@@ -29580,12 +28683,10 @@
           },
           "position": {
             "type": "integer",
-            "description": "Gets or sets the sort priority when multiple sort fields are specified. Lower values take precedence.",
             "format": "int32"
           }
         },
-        "additionalProperties": false,
-        "description": "Defines a single sort criterion applied to a Nomad.Common.Search.SearchModel query.\r\nMultiple Nomad.Common.Search.SearchSort entries can be added to Nomad.Common.Search.SearchModel.SortFields\r\nand are applied in ascending Nomad.Common.Search.SearchSort.Position order."
+        "additionalProperties": false
       },
       "SearchSortTypes": {
         "enum": [
@@ -29593,16 +28694,7 @@
           1
         ],
         "type": "integer",
-        "description": "Specifies the direction of a sort applied to a Nomad.Common.Search.SearchSort field.",
-        "format": "int32",
-        "x-enumNames": [
-          "Ascending",
-          "Descending"
-        ],
-        "x-enumDescriptions": [
-          "Sorts results from the lowest value to the highest value (A → Z, earliest → latest).",
-          "Sorts results from the highest value to the lowest value (Z → A, latest → earliest)."
-        ]
+        "format": "int32"
       },
       "SearchTextFields": {
         "enum": [
@@ -29620,37 +28712,7 @@
           "AI_Text",
           "AI_Captions"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "AssetDetails",
-          "ExactTitle",
-          "TextContents",
-          "Transcripts",
-          "CustomMetadata",
-          "ExifMetadata",
-          "Tags",
-          "Collections",
-          "RelatedContent",
-          "Annotations",
-          "AI_Labels",
-          "AI_Text",
-          "AI_Captions"
-        ],
-        "x-enumDescriptions": [
-          "Searches across all asset detail fields including title, description, and keywords.",
-          "Searches the asset title field for an exact or close match.",
-          "Searches text extracted from the body of document assets.",
-          "Searches subtitle and transcript text associated with media assets.",
-          "Searches values stored in user-defined custom metadata fields.",
-          "Searches metadata embedded in image files via the EXIF standard.",
-          "Searches user-applied tags on assets.",
-          "Searches the names and descriptions of collections containing the asset.",
-          "Searches titles and descriptions of content related to the asset.",
-          "Searches time-coded annotation text attached to media assets.",
-          "Searches AI-generated visual label classifications on images and video frames.",
-          "Searches AI-detected text found within images or video frames.",
-          "Searches AI-generated natural-language captions describing media content."
-        ]
+        "type": "string"
       },
       "SecureOutputFieldStates": {
         "enum": [
@@ -29659,12 +28721,7 @@
           2
         ],
         "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Hidden",
-          "Disabled",
-          "Editable"
-        ]
+        "format": "int32"
       },
       "SecurityModel": {
         "type": "object",
@@ -29706,21 +28763,7 @@
           "Administrator",
           "Guest"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Read",
-          "FileWrite",
-          "FolderWrite",
-          "Administrator",
-          "Guest"
-        ],
-        "x-enumDescriptions": [
-          "Read-only access; the user can view assets but cannot modify or delete them.",
-          "Read and write access; the user can view and upload or update assets.",
-          "Read, write, and delete access; the user can view, upload, update, and delete assets.",
-          "Full administrative access including content management and security configuration.",
-          "Guest access with limited read permissions; intended for unauthenticated or anonymous users."
-        ]
+        "type": "string"
       },
       "SegmentModel": {
         "type": "object",
@@ -29862,14 +28905,7 @@
           5
         ],
         "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "New",
-          "Initializing",
-          "InitializingContent",
-          "Initialized",
-          "InitializationError"
-        ]
+        "format": "int32"
       },
       "StageLoginResponseModel": {
         "allOf": [
@@ -30137,31 +29173,7 @@
           "GlacierInstantRetrieval",
           "Outposts"
         ],
-        "type": "string",
-        "description": "Identifies the S3 storage class of an asset object.\r\nStorage classes differ in durability, availability, retrieval latency, and cost.",
-        "x-enumNames": [
-          "Standard",
-          "ReducedRedundancy",
-          "Glacier",
-          "StandardInfrequentAccess",
-          "OneZoneInfrequentAccess",
-          "IntelligentTiering",
-          "DeepArchive",
-          "GlacierInstantRetrieval",
-          "Outposts"
-        ],
-        "x-enumFlags": true,
-        "x-enumDescriptions": [
-          "General-purpose storage for frequently accessed data. Highest availability and lowest latency.",
-          "Lower-cost storage with reduced redundancy. Suitable for non-critical, reproducible data. (Legacy AWS class.)",
-          "Long-term archival storage. Retrieval takes minutes to hours and incurs a restore fee.",
-          "Infrequently accessed data stored across multiple availability zones. Lower cost than Standard; retrieval milliseconds.",
-          "Infrequently accessed data stored in a single availability zone. Lower cost than Standard-IA; not resilient to AZ loss.",
-          "Automatically moves objects between access tiers based on access patterns to optimise cost.",
-          "Lowest-cost archival storage for data rarely if ever retrieved. Retrieval takes 12 hours or longer.",
-          "Archival storage with millisecond retrieval latency. Suitable for archives accessed occasionally.",
-          "On-premises storage using AWS Outposts infrastructure."
-        ]
+        "type": "string"
       },
       "SubmitJobModel": {
         "required": [
@@ -30335,12 +29347,7 @@
           "Concise",
           "Transcript"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Verbose",
-          "Concise",
-          "Transcript"
-        ]
+        "type": "string"
       },
       "TextItemGroupModel": {
         "type": "object",
@@ -30428,19 +29435,7 @@
           3
         ],
         "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "DocX",
-          "Text",
-          "SRT",
-          "VTT"
-        ],
-        "x-enumDescriptions": [
-          "MS Office DocX.",
-          "Plain Text.",
-          "SRT.",
-          "VTT."
-        ]
+        "format": "int32"
       },
       "TranscriptionV2Model": {
         "type": "object",
@@ -30500,17 +29495,7 @@
         ],
         "type": "integer",
         "description": "Which way an asset transfer moves relative to the platform.",
-        "format": "int32",
-        "x-enumNames": [
-          "All",
-          "Upload",
-          "Download"
-        ],
-        "x-enumDescriptions": [
-          "Both directions. Only valid as a query filter, never stored on a record.",
-          "Content moving from the client into the platform.",
-          "Content moving from the platform out to the client."
-        ]
+        "format": "int32"
       },
       "TransferItemModel": {
         "type": "object",
@@ -30618,6 +29603,21 @@
           "displayObjectKey": {
             "type": "string",
             "description": "Gets or sets the destination object key as it should be shown to a user. Upload only.",
+            "nullable": true
+          },
+          "assetName": {
+            "type": "string",
+            "description": "Gets or sets the display name of the asset this transfer concerns. Download only.",
+            "nullable": true
+          },
+          "assetUrl": {
+            "type": "string",
+            "description": "Gets or sets the internal URL of the asset in `{bucketName}::{objectKey}` format.\r\nDownload only.",
+            "nullable": true
+          },
+          "fullPreviewUrl": {
+            "type": "string",
+            "description": "Gets or sets the signed CDN/S3 URL of the asset's thumbnail image.\r\nNull when no thumbnail is available or the asset has not been indexed yet.",
             "nullable": true
           }
         },
@@ -30771,6 +29771,12 @@
             "format": "int64",
             "nullable": true
           },
+          "bytesTotal": {
+            "type": "integer",
+            "description": "Gets or sets the total file size in bytes, when known to the client.",
+            "format": "int64",
+            "nullable": true
+          },
           "errorMessage": {
             "type": "string",
             "description": "Gets or sets the failure reason. Only read alongside Nomad.Common.Enums.AssetTransferStatuses.Error.",
@@ -30787,19 +29793,43 @@
           "Replace",
           "AssetReplace"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Cancel",
-          "Continue",
-          "Replace",
-          "AssetReplace"
-        ],
-        "x-enumDescriptions": [
-          "If the file already exists on the server then an error will occur",
-          "If the file already exists on the server, then it will be resumed",
-          "If the file already exists on the server, then the existing one will be erased and the new one will take it's place",
-          "If the asset already exists on the server, then the existing one will be replaced and the new one will take it's place"
-        ]
+        "type": "string"
+      },
+      "UploadQueueItemModel": {
+        "type": "object",
+        "properties": {
+          "fileName": {
+            "type": "string",
+            "description": "Gets or sets the file name, including its extension.",
+            "nullable": true
+          },
+          "fileSize": {
+            "type": "integer",
+            "description": "Gets or sets the file size in bytes.",
+            "format": "int64"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "Gets or sets the MIME type of the file, when known. The server otherwise infers it from the\r\nfile name.",
+            "nullable": true
+          },
+          "destinationFolderId": {
+            "type": "string",
+            "description": "Gets or sets the destination folder, or null to use the configured default upload folder.",
+            "format": "uuid",
+            "nullable": true
+          },
+          "chunkSize": {
+            "type": "integer",
+            "description": "Gets or sets the multipart chunk size in bytes. Supplied by the client and tuned to its\r\nconnection, matching the existing single-file upload-start contract.",
+            "format": "int64"
+          },
+          "uploadOverwriteOption": {
+            "$ref": "#/components/schemas/UploadOverwriteOptions"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Describes a single file the client wants to upload."
       },
       "UploadReplaceOptions": {
         "enum": [
@@ -30811,25 +29841,7 @@
           "RecreateSubtitles",
           "RecreateTranscodes"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "ReplaceDisplayName",
-          "ReplaceDisplayDate",
-          "ReplaceLanguage",
-          "RecreateThumbnail",
-          "RecreatePreview",
-          "RecreateSubtitles",
-          "RecreateTranscodes"
-        ],
-        "x-enumDescriptions": [
-          "Replaces the existing display name with the name derived from the incoming file.",
-          "Replaces the existing display date with the date derived from the incoming file.",
-          "Replaces the existing language setting with the language derived from the incoming file.",
-          "Regenerates the thumbnail image from the new file content.",
-          "Regenerates the preview image from the new file content.",
-          "Re-runs subtitle and transcription generation against the new file.",
-          "Re-runs all transcoding jobs against the new file content."
-        ]
+        "type": "string"
       },
       "UserContentAttributeSummaryModel": {
         "type": "object",
@@ -31090,27 +30102,7 @@
           "DeletedInvite"
         ],
         "type": "string",
-        "description": "Indicates the current status of a user session.",
-        "x-enumNames": [
-          "Normal",
-          "ChatDisabled",
-          "SessionReplaced",
-          "Deactivated",
-          "SharedAccess",
-          "PendingInvite",
-          "Expired",
-          "DeletedInvite"
-        ],
-        "x-enumDescriptions": [
-          "The session is active and the user has full access.",
-          "The user's chat functionality has been restricted for this session.",
-          "The session was replaced by a newer login (single-session enforcement).",
-          "The session has been deactivated by an administrator.",
-          "The session belongs to a guest user with shared content access.",
-          "The user has a pending invitation that has not yet been accepted.",
-          "The session has expired due to inactivity or account expiration.",
-          "The user's invitation was revoked and their session was terminated."
-        ]
+        "description": "Indicates the current status of a user session."
       },
       "UserVideoTrackingModel": {
         "type": "object",
@@ -31498,12 +30490,7 @@
           "Watchlist",
           "LiveStream"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Undefined",
-          "Watchlist",
-          "LiveStream"
-        ]
+        "type": "string"
       },
       "VideoTrackingEvents": {
         "enum": [
@@ -31515,16 +30502,7 @@
           "Hide",
           "LiveStream"
         ],
-        "type": "string",
-        "x-enumNames": [
-          "Progress",
-          "FirstQuartile",
-          "Midpoint",
-          "ThirdQuartile",
-          "Complete",
-          "Hide",
-          "LiveStream"
-        ]
+        "type": "string"
       }
     },
     "securitySchemes": {
