@@ -10,7 +10,7 @@
     "license": {
       "name": "MIT"
     },
-    "version": "2026.9.1"
+    "version": "2026.9.2"
   },
   "servers": [
     {
@@ -8034,6 +8034,16 @@
           },
           "401": {
             "description": "Caller is not authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No part list was supplied and one or more parts have not been confirmed.",
             "content": {
               "application/json": {
                 "schema": {
